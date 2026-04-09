@@ -38,6 +38,20 @@ async function audit(tabla: string, registroId: number, accion: string, usuario:
 
 // --- Fetch helpers ---
 
+export async function getPermisosActivosEnArea(areaId: number, excludePermisoId?: number) {
+  const where: any = {
+    areaId,
+    estado: { in: ["ENVIADO", "EN_REVISION", "AUTORIZADO", "EN_EJECUCION"] },
+  };
+  if (excludePermisoId) where.id = { not: excludePermisoId };
+
+  return (await getPrisma()).permisoTrabajo.findMany({
+    where,
+    include: { empleado: true, area: true },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export async function getTodosPermisos() {
   return (await getPrisma()).permisoTrabajo.findMany({
     where: { estado: { not: "BORRADOR" } },

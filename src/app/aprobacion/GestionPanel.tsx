@@ -11,6 +11,7 @@ import {
   suspenderPermiso,
   reanudarPermiso,
   cerrarPermiso,
+  getPermisosActivosEnArea,
 } from "@/lib/actions/flujo";
 import {
   Send,
@@ -34,6 +35,7 @@ type Permiso = {
   id: number;
   folio: string;
   estado: string;
+  areaId: number;
   fechaTrabajo: Date;
   horaInicio: string | null;
   horaFin: string | null;
@@ -365,6 +367,11 @@ export function GestionPanel({ supervisores, permisos }: { supervisores: Supervi
                     </div>
                   )}
 
+                  {/* === INTERFERENCE CHECK (sec. 6.4) === */}
+                  {(pt.estado === "ENVIADO" || pt.estado === "EN_REVISION") && (
+                    <InterferenceCheck permisoId={pt.id} areaId={pt.areaId} areaNombre={pt.area.nombre} />
+                  )}
+
                   {/* === ACTION FORMS by state === */}
 
                   {/* ENVIADO: Iniciar Revision */}
@@ -613,6 +620,68 @@ function ActionFormSuspendido({ pt, isPending, runAction }: { pt: Permiso; isPen
           className="flex-1 bg-gray-700 text-white font-semibold py-2.5 rounded-xl hover:bg-gray-800 transition disabled:opacity-50 flex items-center justify-center gap-2">
           <Archive size={14} /> {isPending ? "..." : "Cerrar Sin Reanudar"}
         </button>
+      </div>
+    </div>
+  );
+}
+
+// --- Interference Check Component (sec. 6.4) ---
+
+function InterferenceCheck({ permisoId, areaId, areaNombre }: { permisoId: number; areaId: number; areaNombre: string }) {
+  const [interferencias, setInterferencias] = useState<any[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    getPermisosActivosEnArea(areaId, permisoId)
+      .then((data) => setInterferencias(data))
+      .catch(() => setInterferencias([]))
+      .finally(() => setLoading(false));
+  }, [areaId, permisoId]);
+
+  if (loading) {
+    return (
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700 animate-pulse">
+        Verificando interferencia con otros trabajos en {areaNombre}...
+      </div>
+    );
+  }
+
+  if (!interferencias || interferencias.length === 0) {
+    return (
+      <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-700 flex items-center gap-2">
+        <CheckCircle size={14} />
+        Sin interferencia — no hay otros permisos activos en {areaNombre}
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-amber-50 border border-amber-300 rounded-lg p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <AlertTriangle size={16} className="text-amber-600" />
+        <span className="text-sm font-bold text-amber-800">
+          Interferencia detectada — {interferencias.length} permiso(s) activo(s) en {areaNombre}
+        </span>
+      </div>
+      <p className="text-xs text-amber-600 mb-3">
+        Seccion 6.4: El Autorizador debe evaluar si existen interferencias con otras actividades y condiciones de los equipos.
+      </p>
+      <div className="space-y-1.5">
+        {interferencias.map((p: any) => (
+          <div key={p.id} className="flex items-center justify-between px-3 py-2 bg-white border border-amber-200 rounded-lg">
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-xs font-bold text-amber-700">{p.folio}</span>
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                p.estado === "EN_EJECUCION" ? "bg-orange-100 text-orange-700" :
+                p.estado === "AUTORIZADO" ? "bg-emerald-100 text-emerald-700" :
+                "bg-blue-100 text-blue-700"
+              }`}>{p.estado.replace(/_/g, " ")}</span>
+              <span className="text-xs text-gray-600">{p.empleado.nombreCompleto}</span>
+            </div>
+            <span className="text-xs text-gray-500">{p.actividadEspecifica?.slice(0, 50)}...</span>
+          </div>
+        ))}
       </div>
     </div>
   );
