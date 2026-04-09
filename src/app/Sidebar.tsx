@@ -3,6 +3,7 @@
 import { useState, createContext, useContext } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { PersonaSwitcher } from "./PersonaSwitcher";
 import {
   Home,
   ClipboardList,
@@ -153,27 +154,9 @@ export function Sidebar() {
           {collapsed ? <ChevronsRight size={18} /> : <ChevronsLeft size={18} />}
         </button>
 
-        {/* User area */}
-        <div className={`border-t border-gray-100 ${collapsed ? "p-2" : "p-4"}`}>
-          {collapsed ? (
-            <div className="w-10 h-10 mx-auto rounded-full bg-engie-blue/10 flex items-center justify-center" title="Operador ENGIE">
-              <User className="w-4 h-4 text-engie-blue" />
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-engie-blue/10 flex items-center justify-center shrink-0">
-                <User className="w-4 h-4 text-engie-blue" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-800 truncate">
-                  Operador ENGIE
-                </p>
-                <p className="text-[11px] text-gray-400 truncate">
-                  permisos@engie.com
-                </p>
-              </div>
-            </div>
-          )}
+        {/* User/Persona switcher */}
+        <div className="border-t border-gray-100">
+          <PersonaSwitcher collapsed={collapsed} />
         </div>
       </aside>
 
