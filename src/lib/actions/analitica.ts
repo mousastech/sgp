@@ -46,8 +46,8 @@ export async function getAnaliticaData() {
     // LOTO stats
     prisma.$queryRawUnsafe(`
       SELECT
-        COUNT(*)::int FILTER (WHERE requiere_loto = true) as con_loto,
-        COUNT(*)::int FILTER (WHERE requiere_loto = false) as sin_loto
+        SUM(CASE WHEN requiere_loto = true THEN 1 ELSE 0 END)::int as con_loto,
+        SUM(CASE WHEN requiere_loto = false THEN 1 ELSE 0 END)::int as sin_loto
       FROM permisos_trabajo WHERE estado != 'BORRADOR'
     `),
     // Riesgo promedio por area
