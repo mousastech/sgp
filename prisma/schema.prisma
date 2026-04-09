@@ -129,6 +129,7 @@ model PermisoTrabajo {
   checklist             ChecklistEpp[]
   aprobaciones          Aprobacion[]
   listasVerificacion    ListaVerificacion[]
+  evidencias            Evidencia[]
 
   @@map("permisos_trabajo")
 }
@@ -160,6 +161,19 @@ model Aprobacion {
   supervisor          Empleado       @relation(fields: [supervisorId], references: [id])
 
   @@map("aprobaciones")
+}
+
+model Evidencia {
+  id          Int            @id @default(autoincrement())
+  permisoId   Int            @map("permiso_id")
+  tipo        String         @db.VarChar(20)
+  nombre      String         @db.VarChar(200)
+  datos       String
+  creadoPor   String?        @map("creado_por") @db.VarChar(200)
+  createdAt   DateTime       @default(now()) @map("created_at")
+  permiso     PermisoTrabajo @relation(fields: [permisoId], references: [id])
+
+  @@map("evidencias")
 }
 
 model ListaVerificacion {

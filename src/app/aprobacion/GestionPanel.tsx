@@ -15,11 +15,14 @@ import {
   cierreAutorizador,
   getPermisosActivosEnArea,
 } from "@/lib/actions/flujo";
+import { getEvidencias, subirEvidencia } from "@/lib/actions/evidencia";
 import {
   Send,
   Search,
   CheckCircle,
   Printer,
+  Camera,
+  Image,
   XCircle,
   RotateCcw,
   Play,
@@ -401,6 +404,11 @@ export function GestionPanel({ supervisores, permisos }: { supervisores: Supervi
                     <InterferenceCheck permisoId={pt.id} areaId={pt.areaId} areaNombre={pt.area.nombre} />
                   )}
 
+                  {/* === PHOTO EVIDENCE (sec. 6.11) === */}
+                  {["EN_EJECUCION", "CIERRE_RESPONSABLE", "CERRADO", "SUSPENDIDO"].includes(pt.estado) && (
+                    <EvidenciaPanel permisoId={pt.id} estado={pt.estado} />
+                  )}
+
                   {/* === ACTION FORMS by state === */}
 
                   {/* ENVIADO: Iniciar Revision */}
@@ -733,6 +741,82 @@ function InterferenceCheck({ permisoId, areaId, areaNombre }: { permisoId: numbe
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// --- Photo Evidence Component (sec. 6.11) ---
+
+function EvidenciaPanel({ permisoId, estado }: { permisoId: number; estado: string }) {
+  const [evidencias, setEvidencias] = useState<any[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const canUpload = ["EN_EJECUCION", "CIERRE_RESPONSABLE", "SUSPENDIDO"].includes(estado);
+
+  useEffect(() => {
+    getEvidencias(permisoId).then(setEvidencias);
+  }, [permisoId]);
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert("Maximo 5MB por imagen"); return; }
+
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result as string;
+      const fd = new FormData();
+      fd.set("permisoId", String(permisoId));
+      fd.set("tipo", "FOTO");
+      fd.set("nombre", file.name);
+      fd.set("datos", base64);
+      fd.set("creadoPor", "Operador");
+      await subirEvidencia(fd);
+      const updated = await getEvidencias(permisoId);
+      setEvidencias(updated);
+      setUploading(false);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
+  return (
+    <div className="border border-gray-200 rounded-lg overflow-hidden">
+      <button onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-gray-100 transition text-sm">
+        <span className="flex items-center gap-2 font-semibold text-gray-700">
+          <Camera size={14} /> Evidencia Fotografica (sec. 6.11)
+          {evidencias.length > 0 && <span className="bg-engie-blue text-white text-[10px] px-1.5 py-0.5 rounded-full">{evidencias.length}</span>}
+        </span>
+        <span className="text-gray-400">{expanded ? "▲" : "▼"}</span>
+      </button>
+      {expanded && (
+        <div className="p-4 space-y-3">
+          {evidencias.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {evidencias.map((ev) => (
+                <div key={ev.id} className="bg-gray-100 rounded-lg p-2 text-center">
+                  <Image size={24} className="text-gray-400 mx-auto mb-1" />
+                  <p className="text-[10px] text-gray-600 truncate">{ev.nombre}</p>
+                  <p className="text-[9px] text-gray-400">{new Date(ev.createdAt).toLocaleString("es-MX")}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400 text-center py-2">Sin evidencias adjuntas</p>
+          )}
+          {canUpload && (
+            <label className="flex items-center gap-2 px-4 py-2.5 bg-engie-blue/5 border border-engie-blue/20 rounded-lg cursor-pointer hover:bg-engie-blue/10 transition">
+              <Camera size={16} className="text-engie-blue" />
+              <span className="text-sm font-medium text-engie-blue">
+                {uploading ? "Subiendo..." : "Subir foto (max 5MB)"}
+              </span>
+              <input type="file" accept="image/*" capture="environment" onChange={handleUpload} disabled={uploading} className="hidden" />
+            </label>
+          )}
+        </div>
+      )}
     </div>
   );
 }
