@@ -121,5 +121,12 @@ export async function crearPermiso(formData: FormData) {
   revalidatePath("/aprobacion");
   revalidatePath("/dashboard");
 
-  return { success: true, folio, estado };
+  // Check 24h advance warning (sec. 6.3)
+  const fechaObj = new Date(fechaTrabajo + "T00:00:00");
+  const horasAnticipacion = (fechaObj.getTime() - Date.now()) / (1000 * 60 * 60);
+  const warning = horasAnticipacion < 24
+    ? "Solicitud con menos de 24h de anticipacion (sec. 6.3)"
+    : undefined;
+
+  return { success: true, folio, estado, warning };
 }

@@ -30,8 +30,9 @@ const TIPOS_ESPECIAL = [
 
 export function CapturaForm({ empleados, areas }: Props) {
   const [isPending, startTransition] = useTransition();
-  const [result, setResult] = useState<{ success?: boolean; folio?: string; estado?: string; errors?: string[] } | null>(null);
+  const [result, setResult] = useState<{ success?: boolean; folio?: string; estado?: string; errors?: string[]; warning?: string } | null>(null);
   const [tiposEspecial, setTiposEspecial] = useState<Record<string, boolean>>({});
+  const [warn24h, setWarn24h] = useState(false);
   const [requiereLoto, setRequiereLoto] = useState(false);
   const [geo, setGeo] = useState<{ lat: number; lon: number } | null>(null);
   const [geoStatus, setGeoStatus] = useState<string>("Obteniendo ubicacion...");
@@ -87,9 +88,16 @@ export function CapturaForm({ empleados, areas }: Props) {
       </div>
 
       {result?.success && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 text-green-800 font-semibold">
-          Permiso <span className="font-mono">{result.folio}</span> guardado como{" "}
-          <span className="uppercase">{result.estado}</span>
+        <div className="space-y-2 mb-4">
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-green-800 font-semibold">
+            Permiso <span className="font-mono">{result.folio}</span> guardado como{" "}
+            <span className="uppercase">{result.estado}</span>
+          </div>
+          {result.warning && (
+            <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 text-amber-800 text-sm">
+              {result.warning}
+            </div>
+          )}
         </div>
       )}
       {result?.errors && (
@@ -118,13 +126,28 @@ export function CapturaForm({ empleados, areas }: Props) {
             </label>
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Solicitado para fecha * <span className="text-gray-400 font-normal">(3)</span></span>
-              <input type="date" name="fechaTrabajo" defaultValue={today} required className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
+              <input type="date" name="fechaTrabajo" defaultValue={today} required
+                onChange={(e) => {
+                  const selected = new Date(e.target.value + "T00:00:00");
+                  const diff = selected.getTime() - Date.now();
+                  setWarn24h(diff < 24 * 60 * 60 * 1000);
+                }}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
             </label>
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Hora solicitada <span className="text-gray-400 font-normal">(4)</span></span>
               <input type="time" name="horaInicio" defaultValue="08:00" className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
             </label>
           </div>
+          {warn24h && (
+            <div className="mt-3 bg-amber-50 border border-amber-300 rounded-lg px-4 py-3 flex items-start gap-3">
+              <span className="text-amber-500 text-lg mt-0.5">!</span>
+              <div>
+                <p className="text-sm font-semibold text-amber-800">Solicitud con menos de 24 horas de anticipacion</p>
+                <p className="text-xs text-amber-600 mt-0.5">Sec. 6.3: Debe prevalecer la solicitud del trabajo de forma anticipada (mas de 24h antes de la fecha de ejecucion del trabajo) siempre que sea posible.</p>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Datos de solicitud */}
