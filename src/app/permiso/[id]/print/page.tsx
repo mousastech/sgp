@@ -26,36 +26,30 @@ export default async function PrintPermitPage({ params }: { params: Promise<{ id
   const autorizacion = p.aprobaciones?.find((a: any) => a.decision === "AUTORIZADO");
 
   return (
-    <html lang="es">
-      <head>
-        <title>Permiso {p.folio} — ENGIE</title>
-        <style>{`
-          @media print { body { margin: 0; } .no-print { display: none !important; } }
-          body { font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
-          h1 { font-size: 16px; text-align: center; margin: 0; }
-          h2 { font-size: 13px; color: #003DA5; margin: 12px 0 6px; padding: 4px 0; border-bottom: 1px solid #003DA5; }
-          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #003DA5; padding-bottom: 8px; margin-bottom: 12px; }
-          .header img { height: 30px; }
-          .code { font-size: 9px; color: #666; text-align: right; }
-          .row { display: flex; gap: 16px; margin-bottom: 4px; }
-          .field { flex: 1; }
-          .field label { font-size: 9px; color: #666; display: block; }
-          .field .val { font-size: 11px; font-weight: 600; border-bottom: 1px solid #ccc; min-height: 16px; padding: 2px 0; }
-          .check-table { width: 100%; border-collapse: collapse; margin: 6px 0; }
-          .check-table td, .check-table th { border: 1px solid #ccc; padding: 4px 8px; font-size: 10px; }
-          .check-table th { background: #f0f4f8; text-align: left; }
-          .check-table .center { text-align: center; width: 40px; }
-          .sig-row { display: flex; gap: 20px; margin: 8px 0; align-items: flex-end; }
-          .sig-row .sig { flex: 2; border-bottom: 1px solid #333; min-height: 20px; }
-          .sig-row .sig-label { font-size: 9px; color: #666; }
-          .sig-row .sig-date { flex: 1; }
-          .note { font-size: 9px; color: #666; font-style: italic; margin: 4px 0; }
-          .btn-print { position: fixed; top: 20px; right: 20px; background: #003DA5; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; }
-          .btn-print:hover { background: #002D7A; }
-          .footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #ccc; font-size: 9px; color: #999; text-align: center; }
-        `}</style>
-      </head>
-      <body>
+    <>
+      <style>{`
+        @media print { .no-print { display: none !important; } .print-page { margin: 0 !important; padding: 0 !important; } }
+        .print-page { font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #333; max-width: 800px; margin: 0 auto; }
+        .print-page h1 { font-size: 16px; text-align: center; margin: 0; }
+        .print-page h2 { font-size: 13px; color: #003DA5; margin: 12px 0 6px; padding: 4px 0; border-bottom: 1px solid #003DA5; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #003DA5; padding-bottom: 8px; margin-bottom: 12px; }
+        .code { font-size: 9px; color: #666; text-align: right; }
+        .row { display: flex; gap: 16px; margin-bottom: 4px; }
+        .field { flex: 1; }
+        .field label { font-size: 9px; color: #666; display: block; }
+        .field .val { font-size: 11px; font-weight: 600; border-bottom: 1px solid #ccc; min-height: 16px; padding: 2px 0; }
+        .check-table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+        .check-table td, .check-table th { border: 1px solid #ccc; padding: 4px 8px; font-size: 10px; }
+        .check-table th { background: #f0f4f8; text-align: left; }
+        .check-table .center { text-align: center; width: 40px; }
+        .sig-row { display: flex; gap: 20px; margin: 8px 0; align-items: flex-end; }
+        .sig-row .sig { flex: 2; border-bottom: 1px solid #333; min-height: 20px; }
+        .sig-row .sig-label { font-size: 9px; color: #666; }
+        .sig-row .sig-date { flex: 1; }
+        .note { font-size: 9px; color: #666; font-style: italic; margin: 4px 0; }
+        .footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #ccc; font-size: 9px; color: #999; text-align: center; }
+      `}</style>
+      <div className="print-page">
         <PrintButton />
 
         {/* Header */}
@@ -169,7 +163,7 @@ export default async function PrintPermitPage({ params }: { params: Promise<{ id
           Este documento debera permanecer en su formato original en resguardo ubicado en cuarto de control.
           <br />Generado digitalmente — Sistema de Permisos de Trabajo ENGIE | Powered by Databricks
         </div>
-      </body>
-    </html>
+      </div>
+    </>
   );
 }
