@@ -19,6 +19,7 @@ import {
   Send,
   Search,
   CheckCircle,
+  Printer,
   XCircle,
   RotateCcw,
   Play,
@@ -262,7 +263,15 @@ export function GestionPanel({ supervisores, permisos }: { supervisores: Supervi
                   <span className="text-gray-400 text-xs">|</span>
                   <span className="text-sm text-gray-500">{pt.area.nombre}</span>
                 </div>
-                {expandedId === pt.id ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+                <div className="flex items-center gap-2">
+                  {["AUTORIZADO", "EN_EJECUCION", "CIERRE_RESPONSABLE", "CERRADO"].includes(pt.estado) && (
+                    <a href={`/permiso/${pt.id}/print`} target="_blank" onClick={(e) => e.stopPropagation()}
+                      className="p-1.5 rounded-lg hover:bg-gray-100 transition" title="Imprimir Permiso">
+                      <Printer size={14} className="text-gray-400" />
+                    </a>
+                  )}
+                  {expandedId === pt.id ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+                </div>
               </button>
 
               {/* Expanded detail */}

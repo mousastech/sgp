@@ -52,6 +52,21 @@ export async function getPermisosActivosEnArea(areaId: number, excludePermisoId?
   });
 }
 
+export async function getPermisoCompleto(id: number) {
+  const permiso = await (await getPrisma()).permisoTrabajo.findUnique({
+    where: { id },
+    include: {
+      empleado: true,
+      area: true,
+      aprobaciones: { include: { supervisor: true }, orderBy: { fechaFirma: "desc" } },
+      listasVerificacion: true,
+    },
+  });
+  if (!permiso) return null;
+  // Serialize dates
+  return JSON.parse(JSON.stringify(permiso));
+}
+
 export async function getTodosPermisos() {
   return (await getPrisma()).permisoTrabajo.findMany({
     where: { estado: { not: "BORRADOR" } },
