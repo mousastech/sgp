@@ -12,6 +12,7 @@ import {
   BarChart3,
   BookOpen,
   MessageSquare,
+  TrendingUp,
   Settings,
   Menu,
   X,
@@ -47,6 +48,7 @@ const NAV_SECTIONS = [
     title: "IA",
     items: [
       { href: "/genie", label: "Genie de Seguridad", icon: MessageSquare },
+      { href: "/analitica", label: "Analitica de Riesgo", icon: TrendingUp },
     ],
   },
   {
