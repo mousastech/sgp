@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   CheckCircle,
   BarChart3,
+  BookOpen,
   Settings,
   Menu,
   X,
@@ -28,6 +29,7 @@ const NAV_SECTIONS = [
     title: "CUMPLIMIENTO",
     items: [
       { href: "/dashboard", label: "Dashboard HSE", icon: BarChart3 },
+      { href: "/bitacora", label: "Bitacora de Permisos", icon: BookOpen },
     ],
   },
   {
