@@ -146,20 +146,17 @@ export function BitacoraView({ permisos, areas }: { permisos: Permiso[]; areas: 
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
-        <table className="w-full text-sm">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <table className="w-full text-xs">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="text-left p-3 font-semibold text-gray-600 whitespace-nowrap">Folio</th>
-              <th className="text-left p-3 font-semibold text-gray-600 whitespace-nowrap">Fecha Trabajo</th>
-              <th className="text-left p-3 font-semibold text-gray-600 whitespace-nowrap">Area</th>
-              <th className="text-left p-3 font-semibold text-gray-600 whitespace-nowrap">Solicitante</th>
-              <th className="text-left p-3 font-semibold text-gray-600 whitespace-nowrap">Responsable</th>
-              <th className="text-left p-3 font-semibold text-gray-600 whitespace-nowrap">Autorizador</th>
-              <th className="text-left p-3 font-semibold text-gray-600 whitespace-nowrap">Especial</th>
-              <th className="text-left p-3 font-semibold text-gray-600 whitespace-nowrap">Estado</th>
-              <th className="text-left p-3 font-semibold text-gray-600 whitespace-nowrap">Cierre</th>
-              <th className="text-center p-3 font-semibold text-gray-600 whitespace-nowrap no-print">PDF</th>
+              <th className="text-left p-2 font-semibold text-gray-600">Folio</th>
+              <th className="text-left p-2 font-semibold text-gray-600">Fecha</th>
+              <th className="text-left p-2 font-semibold text-gray-600">Area</th>
+              <th className="text-left p-2 font-semibold text-gray-600">Solicitante / Responsable</th>
+              <th className="text-left p-2 font-semibold text-gray-600">Autorizador</th>
+              <th className="text-left p-2 font-semibold text-gray-600">Estado</th>
+              <th className="text-center p-2 font-semibold text-gray-600 no-print">PDF</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -169,30 +166,25 @@ export function BitacoraView({ permisos, areas }: { permisos: Permiso[]; areas: 
               const autorizador = p.aprobaciones?.[0]?.supervisor?.nombreCompleto || "—";
               return (
                 <tr key={p.id} className="hover:bg-gray-50">
-                  <td className="p-3 font-mono text-engie-blue font-bold whitespace-nowrap">{p.folio}</td>
-                  <td className="p-3 text-gray-600 whitespace-nowrap">{new Date(p.fechaTrabajo).toLocaleDateString("es-MX")}</td>
-                  <td className="p-3 text-gray-600 whitespace-nowrap">{p.area.nombre}</td>
-                  <td className="p-3 text-gray-700 whitespace-nowrap">{p.empleado.nombreCompleto}</td>
-                  <td className="p-3 text-gray-600 whitespace-nowrap">{p.responsableTrabajo || "—"}</td>
-                  <td className="p-3 text-gray-600 whitespace-nowrap">{autorizador}</td>
-                  <td className="p-3 whitespace-nowrap">
-                    {tipos.length > 0 ? (
-                      <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded">{tipos.length} tipo(s)</span>
-                    ) : "—"}
-                    {p.requiereLoto && <span className="text-[10px] font-bold text-yellow-700 bg-yellow-100 px-1.5 py-0.5 rounded ml-1">LOTO</span>}
+                  <td className="p-2 font-mono text-engie-blue font-bold">{p.folio}</td>
+                  <td className="p-2 text-gray-600">{new Date(p.fechaTrabajo).toLocaleDateString("es-MX")}</td>
+                  <td className="p-2 text-gray-600 max-w-[140px] truncate">{p.area.nombre}</td>
+                  <td className="p-2">
+                    <p className="text-gray-700 truncate">{p.empleado.nombreCompleto}</p>
+                    {p.responsableTrabajo && <p className="text-gray-400 truncate">{p.responsableTrabajo}</p>}
                   </td>
-                  <td className="p-3 whitespace-nowrap">
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${ESTADO_BADGE[p.estado] || "bg-gray-100 text-gray-600"}`}>
+                  <td className="p-2 text-gray-600 truncate">{autorizador}</td>
+                  <td className="p-2">
+                    <span className={`inline-block px-1.5 py-0.5 rounded-full text-[9px] font-bold ${ESTADO_BADGE[p.estado] || "bg-gray-100 text-gray-600"}`}>
                       {p.estado.replace(/_/g, " ")}
                     </span>
+                    {tipos.length > 0 && <span className="text-[9px] font-bold text-purple-600 ml-1">{tipos.length}E</span>}
+                    {p.requiereLoto && <span className="text-[9px] font-bold text-yellow-600 ml-1">L</span>}
                   </td>
-                  <td className="p-3 text-gray-500 text-xs whitespace-nowrap">
-                    {p.fechaCierre ? new Date(p.fechaCierre).toLocaleDateString("es-MX") : "—"}
-                  </td>
-                  <td className="p-3 text-center whitespace-nowrap no-print">
+                  <td className="p-2 text-center no-print">
                     {["AUTORIZADO", "EN_EJECUCION", "CIERRE_RESPONSABLE", "CERRADO"].includes(p.estado) && (
                       <a href={`/permiso/${p.id}/print`} target="_blank" className="text-gray-400 hover:text-engie-blue transition">
-                        <Printer size={14} className="inline" />
+                        <Printer size={12} className="inline" />
                       </a>
                     )}
                   </td>
