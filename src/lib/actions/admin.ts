@@ -17,6 +17,22 @@ export async function crearCategoria(formData: FormData) {
   return { success: true };
 }
 
+export async function editarCategoria(formData: FormData) {
+  const id = Number(formData.get("id"));
+  const nombre = (formData.get("nombre") as string)?.trim();
+  const descripcion = (formData.get("descripcion") as string)?.trim() || null;
+  if (!nombre) return { error: "El nombre es obligatorio." };
+  await (await getPrisma()).categoriaEpp.update({ where: { id }, data: { nombre, descripcion } });
+  revalidatePath("/admin");
+  return { success: true };
+}
+
+export async function desactivarCategoria(id: number) {
+  await (await getPrisma()).categoriaEpp.update({ where: { id }, data: { activo: false } });
+  revalidatePath("/admin");
+  return { success: true };
+}
+
 // --- Equipos ---
 export async function getEquipos() {
   return (await getPrisma()).equipoEpp.findMany({
@@ -36,6 +52,22 @@ export async function crearEquipo(formData: FormData) {
   return { success: true };
 }
 
+export async function editarEquipo(formData: FormData) {
+  const id = Number(formData.get("id"));
+  const nombre = (formData.get("nombre") as string)?.trim();
+  const obligatorio = formData.get("obligatorio") === "true";
+  if (!nombre) return { error: "El nombre es obligatorio." };
+  await (await getPrisma()).equipoEpp.update({ where: { id }, data: { nombre, obligatorio } });
+  revalidatePath("/admin");
+  return { success: true };
+}
+
+export async function desactivarEquipo(id: number) {
+  await (await getPrisma()).equipoEpp.update({ where: { id }, data: { activo: false } });
+  revalidatePath("/admin");
+  return { success: true };
+}
+
 // --- Áreas ---
 export async function getAreas() {
   return (await getPrisma()).area.findMany({ where: { activo: true }, orderBy: { nombre: "asc" } });
@@ -48,6 +80,53 @@ export async function crearArea(formData: FormData) {
   const lon = parseFloat(formData.get("lon") as string) || null;
   if (!nombre) return { error: "El nombre es obligatorio." };
   await (await getPrisma()).area.create({ data: { nombre, ubicacion, coordenadasLat: lat, coordenadasLon: lon } });
+  revalidatePath("/admin");
+  return { success: true };
+}
+
+export async function editarArea(formData: FormData) {
+  const id = Number(formData.get("id"));
+  const nombre = (formData.get("nombre") as string)?.trim();
+  const ubicacion = (formData.get("ubicacion") as string)?.trim() || null;
+  if (!nombre) return { error: "El nombre es obligatorio." };
+  await (await getPrisma()).area.update({ where: { id }, data: { nombre, ubicacion } });
+  revalidatePath("/admin");
+  return { success: true };
+}
+
+export async function desactivarArea(id: number) {
+  await (await getPrisma()).area.update({ where: { id }, data: { activo: false } });
+  revalidatePath("/admin");
+  return { success: true };
+}
+
+export async function editarEmpleado(formData: FormData) {
+  const id = Number(formData.get("id"));
+  const nombreCompleto = (formData.get("nombreCompleto") as string)?.trim();
+  const puesto = (formData.get("puesto") as string)?.trim() || null;
+  const email = (formData.get("email") as string)?.trim() || null;
+  const areaId = Number(formData.get("areaId")) || null;
+  const esSupervisor = formData.get("esSupervisor") === "true";
+  const puestoHomologado = (formData.get("puestoHomologado") as string)?.trim() || null;
+  if (!nombreCompleto) return { error: "El nombre es obligatorio." };
+  const roles = puestoHomologado ? ROLE_MATRIX[puestoHomologado] : null;
+  await (await getPrisma()).empleado.update({
+    where: { id },
+    data: {
+      nombreCompleto, puesto, email, areaId, esSupervisor, puestoHomologado,
+      puedeSerSolicitante: roles?.solicitante ?? true,
+      puedeSerResponsable: roles?.responsable ?? true,
+      puedeSerAutorizador: roles?.autorizador ?? esSupervisor,
+      esJefePlanta: roles?.jefePlanta ?? false,
+      esContratista: roles?.contratista ?? false,
+    },
+  });
+  revalidatePath("/admin");
+  return { success: true };
+}
+
+export async function desactivarEmpleado(id: number) {
+  await (await getPrisma()).empleado.update({ where: { id }, data: { activo: false } });
   revalidatePath("/admin");
   return { success: true };
 }
