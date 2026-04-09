@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { getHomeData } from "@/lib/actions/home";
+import { HomeRoleBanner } from "./HomeRoleBanner";
 import Link from "next/link";
 import {
   ClipboardList,
@@ -63,6 +64,9 @@ export default async function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Role banner */}
+      <HomeRoleBanner />
 
       {/* Pending actions */}
       {pendingActions.length > 0 && (

@@ -11,6 +11,7 @@ import {
   CheckCircle,
   BarChart3,
   BookOpen,
+  Calendar,
   MessageSquare,
   TrendingUp,
   Settings,
@@ -42,6 +43,7 @@ const NAV_SECTIONS = [
     items: [
       { href: "/dashboard", label: "Dashboard HSE", icon: BarChart3 },
       { href: "/bitacora", label: "Bitacora de Permisos", icon: BookOpen },
+      { href: "/calendario", label: "Calendario", icon: Calendar },
     ],
   },
   {
