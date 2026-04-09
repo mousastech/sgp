@@ -191,6 +191,16 @@ export function AdminPanel({ categorias, equipos, areas, empleados }: Props) {
                   <option key={a.id} value={a.id}>{a.nombre}</option>
                 ))}
               </select>
+              <select name="puestoHomologado" className="rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border">
+                <option value="">Puesto homologado (Anexo 1)</option>
+                <option value="JEFE_PLANTA">Jefe de Planta</option>
+                <option value="JEFE_MANTENIMIENTO">Jefe de Mantenimiento</option>
+                <option value="SUPERVISOR_HSE">Supervisor HSE</option>
+                <option value="ING_CONFIABILIDAD">Ing. de Confiabilidad</option>
+                <option value="TEC_MANTENIMIENTO">Tec. de Mantenimiento</option>
+                <option value="AUX_MANTENIMIENTO">Aux. de Mantenimiento</option>
+                <option value="CONTRATISTA">Contratista</option>
+              </select>
               <label className="flex items-center gap-2 text-sm p-2.5">
                 <input type="checkbox" name="esSupervisor" value="true" className="rounded" />
                 Es supervisor

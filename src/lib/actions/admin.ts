@@ -61,6 +61,17 @@ export async function getEmpleados() {
   });
 }
 
+// Role matrix per Anexo 1 - Tabla de Homologacion de Puestos
+const ROLE_MATRIX: Record<string, { solicitante: boolean; responsable: boolean; autorizador: boolean; jefePlanta: boolean; contratista: boolean }> = {
+  JEFE_PLANTA:        { solicitante: true,  responsable: true,  autorizador: true,  jefePlanta: true,  contratista: false },
+  JEFE_MANTENIMIENTO: { solicitante: true,  responsable: true,  autorizador: true,  jefePlanta: false, contratista: false },
+  SUPERVISOR_HSE:     { solicitante: true,  responsable: true,  autorizador: false, jefePlanta: false, contratista: false },
+  ING_CONFIABILIDAD:  { solicitante: true,  responsable: true,  autorizador: true,  jefePlanta: false, contratista: false },
+  TEC_MANTENIMIENTO:  { solicitante: true,  responsable: true,  autorizador: false, jefePlanta: false, contratista: false },
+  AUX_MANTENIMIENTO:  { solicitante: true,  responsable: true,  autorizador: false, jefePlanta: false, contratista: false },
+  CONTRATISTA:        { solicitante: false, responsable: true,  autorizador: false, jefePlanta: false, contratista: true  },
+};
+
 export async function crearEmpleado(formData: FormData) {
   const numeroEmpleado = (formData.get("numeroEmpleado") as string)?.trim();
   const nombreCompleto = (formData.get("nombreCompleto") as string)?.trim();
@@ -68,9 +79,22 @@ export async function crearEmpleado(formData: FormData) {
   const email = (formData.get("email") as string)?.trim() || null;
   const areaId = Number(formData.get("areaId")) || null;
   const esSupervisor = formData.get("esSupervisor") === "true";
+  const puestoHomologado = (formData.get("puestoHomologado") as string)?.trim() || null;
   if (!numeroEmpleado || !nombreCompleto) return { error: "Número y nombre son obligatorios." };
+
+  // Auto-derive role permissions from puestoHomologado
+  const roles = puestoHomologado ? ROLE_MATRIX[puestoHomologado] : null;
+
   await (await getPrisma()).empleado.create({
-    data: { numeroEmpleado, nombreCompleto, puesto, email, areaId, esSupervisor },
+    data: {
+      numeroEmpleado, nombreCompleto, puesto, email, areaId, esSupervisor,
+      puestoHomologado,
+      puedeSerSolicitante: roles?.solicitante ?? true,
+      puedeSerResponsable: roles?.responsable ?? true,
+      puedeSerAutorizador: roles?.autorizador ?? (esSupervisor),
+      esJefePlanta: roles?.jefePlanta ?? false,
+      esContratista: roles?.contratista ?? false,
+    },
   });
   revalidatePath("/admin");
   return { success: true };

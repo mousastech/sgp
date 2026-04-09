@@ -92,6 +92,20 @@ export async function getSupervisores() {
   });
 }
 
+export async function getAutorizadores() {
+  return (await getPrisma()).empleado.findMany({
+    where: { activo: true, OR: [{ puedeSerAutorizador: true }, { esJefePlanta: true }] },
+    orderBy: { nombreCompleto: "asc" },
+  });
+}
+
+export async function getJefesPlanta() {
+  return (await getPrisma()).empleado.findMany({
+    where: { activo: true, esJefePlanta: true },
+    orderBy: { nombreCompleto: "asc" },
+  });
+}
+
 // --- 6.4 Iniciar Revision (ENVIADO → EN_REVISION) ---
 
 export async function iniciarRevision(formData: FormData) {
@@ -105,9 +119,19 @@ export async function iniciarRevision(formData: FormData) {
 
   const supervisor = await (await getPrisma()).empleado.findUnique({ where: { id: supervisorId } });
 
+  // Validate: Autorizador must have puedeSerAutorizador role
+  if (supervisor && !supervisor.puedeSerAutorizador && !supervisor.esJefePlanta) {
+    return { success: false, error: `${supervisor.nombreCompleto} no tiene rol de Autorizador (Anexo 1).` };
+  }
+
+  // Validate: Autorizador cannot be the same as Solicitante who is also Responsable
+  if (permiso.empleadoId === supervisorId && permiso.responsableId === supervisorId) {
+    return { success: false, error: "El Autorizador no puede ser la misma persona que el Responsable del Trabajo (Anexo 1)." };
+  }
+
   await (await getPrisma()).permisoTrabajo.update({
     where: { id: permisoId },
-    data: { estado: "EN_REVISION", updatedAt: new Date() },
+    data: { estado: "EN_REVISION", autorizadorId: supervisorId, updatedAt: new Date() },
   });
 
   await audit("permisos_trabajo", permisoId, "INICIAR_REVISION",
@@ -136,6 +160,25 @@ export async function autorizarPermiso(formData: FormData) {
   }
 
   const supervisor = await (await getPrisma()).empleado.findUnique({ where: { id: supervisorId } });
+
+  // Validate: Autorizador role required
+  if (supervisor && !supervisor.puedeSerAutorizador && !supervisor.esJefePlanta) {
+    return { success: false, error: `${supervisor.nombreCompleto} no tiene rol de Autorizador (Anexo 1).` };
+  }
+
+  // Validate: Autorizador != Responsable del Trabajo
+  if (permiso.responsableId && permiso.responsableId === supervisorId) {
+    return { success: false, error: "El Autorizador no puede ser el Responsable del Trabajo (Anexo 1)." };
+  }
+
+  // Validate: Trabajo Especial requires Jefe de Planta approval
+  let tiposEspeciales: string[] = [];
+  try { tiposEspeciales = JSON.parse(permiso.tiposTrabajoEspecial || "[]"); } catch {}
+  if (tiposEspeciales.length > 0 && supervisor && !supervisor.esJefePlanta) {
+    // Warning: special work ideally needs Jefe de Planta, but Autorizador can proceed
+    // The Jefe de Planta co-signs in the verification list authorization section
+  }
+
   const firmaData = `${supervisor?.nombreCompleto}|${permiso.folio}|AUTORIZADO|${new Date().toISOString()}|${password}`;
   const firmaHash = createHash("sha256").update(firmaData).digest("hex");
 

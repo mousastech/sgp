@@ -52,6 +52,14 @@ model Empleado {
   puesto          String?          @db.VarChar(100)
   areaId          Int?             @map("area_id")
   esSupervisor    Boolean          @default(false) @map("es_supervisor")
+  // Roles per Anexo 1 - Tabla de Homologacion de Puestos
+  // JEFE_PLANTA, JEFE_MANTENIMIENTO, SUPERVISOR_HSE, ING_CONFIABILIDAD, TEC_MANTENIMIENTO, AUX_MANTENIMIENTO, CONTRATISTA
+  puestoHomologado String?         @map("puesto_homologado") @db.VarChar(30)
+  puedeSerSolicitante  Boolean     @default(true) @map("puede_ser_solicitante")
+  puedeSerResponsable  Boolean     @default(true) @map("puede_ser_responsable")
+  puedeSerAutorizador  Boolean     @default(false) @map("puede_ser_autorizador")
+  esJefePlanta         Boolean     @default(false) @map("es_jefe_planta")
+  esContratista        Boolean     @default(false) @map("es_contratista")
   email           String?          @db.VarChar(150)
   activo          Boolean          @default(true)
   createdAt       DateTime         @default(now()) @map("created_at")
@@ -79,6 +87,10 @@ model PermisoTrabajo {
   coordenadasLatCaptura Decimal?       @map("coordenadas_lat_captura") @db.Decimal(10, 8)
   coordenadasLonCaptura Decimal?       @map("coordenadas_lon_captura") @db.Decimal(11, 8)
   observacionesOperador String?        @map("observaciones_operador")
+  // --- Roles asignados al permiso (Anexo 1) ---
+  responsableId         Int?           @map("responsable_id")
+  autorizadorId         Int?           @map("autorizador_id")
+  jefePlantaId          Int?           @map("jefe_planta_id")
   // --- Apartado I. Solicitud (IN01 campos 2,7-9,12-14) ---
   ordenTrabajo          String?        @map("orden_trabajo") @db.VarChar(50)
   duracionDias          Int?           @map("duracion_dias")

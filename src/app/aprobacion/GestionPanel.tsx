@@ -100,7 +100,13 @@ const TIPO_ESPECIAL_LABELS: Record<string, string> = {
   ICS: "Intervencion ICS",
 };
 
-export function GestionPanel({ supervisores, permisos }: { supervisores: Supervisor[]; permisos: Permiso[] }) {
+type SupervisorFull = Supervisor & {
+  puedeSerAutorizador?: boolean;
+  esJefePlanta?: boolean;
+  puestoHomologado?: string | null;
+};
+
+export function GestionPanel({ supervisores, permisos }: { supervisores: SupervisorFull[]; permisos: Permiso[] }) {
   const [supId, setSupId] = useState(supervisores[0]?.id);
   const [activeTab, setActiveTab] = useState("ENVIADO");
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -158,17 +164,26 @@ export function GestionPanel({ supervisores, permisos }: { supervisores: Supervi
         </div>
       )}
 
-      {/* Supervisor selector */}
+      {/* Autorizador selector */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <label className="block">
-          <span className="text-sm font-medium text-gray-700">Actuar como Autorizador</span>
+          <span className="text-sm font-medium text-gray-700">Actuar como Autorizador <span className="text-gray-400 font-normal">(Anexo 1 — Homologacion de Puestos)</span></span>
           <select value={supId} onChange={(e) => setSupId(Number(e.target.value))}
             className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border">
             {supervisores.map((s) => (
-              <option key={s.id} value={s.id}>{s.numeroEmpleado} — {s.nombreCompleto}</option>
+              <option key={s.id} value={s.id}>
+                {s.numeroEmpleado} — {s.nombreCompleto}
+                {s.esJefePlanta ? " [Jefe de Planta]" : s.puedeSerAutorizador ? " [Autorizador]" : ""}
+              </option>
             ))}
           </select>
         </label>
+        {(() => {
+          const sel = supervisores.find((s) => s.id === supId);
+          if (sel?.esJefePlanta) return <p className="text-xs text-engie-blue mt-1 font-semibold">Jefe de Planta — puede autorizar permisos generales y trabajos especiales</p>;
+          if (sel?.puedeSerAutorizador) return <p className="text-xs text-green-600 mt-1">Autorizador — puede autorizar permisos generales</p>;
+          return <p className="text-xs text-amber-600 mt-1">Este usuario no tiene rol de Autorizador en la matriz de puestos</p>;
+        })()}
       </div>
 
       {/* Pipeline visualization */}
