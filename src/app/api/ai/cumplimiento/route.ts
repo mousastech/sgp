@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { callFMAPI } from "@/lib/fmapi";
 
 export const dynamic = "force-dynamic";
 
@@ -33,36 +34,6 @@ Responde en JSON con esta estructura:
   "resumen": "resumen ejecutivo de 1-2 oraciones"
 }`;
 
-async function getLLMResponse(prompt: string): Promise<string> {
-  const host = process.env.DATABRICKS_HOST || "";
-  const token = process.env.DATABRICKS_TOKEN || "";
-  const baseUrl = host.startsWith("http") ? host : `https://${host}`;
-
-  const response = await fetch(`${baseUrl}/serving-endpoints/databricks-claude-sonnet-4-6/invocations`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: prompt },
-      ],
-      max_tokens: 1500,
-      temperature: 0.1,
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`FMAPI error ${response.status}: ${err}`);
-  }
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || "";
-}
-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -94,7 +65,10 @@ CONDICIONES ESPECIALES:
 
 Evalua el cumplimiento del procedimiento RENOVABLES-O-PR-01 y genera el JSON de revision.`;
 
-    const content = await getLLMResponse(prompt);
+    const content = await callFMAPI([
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: prompt },
+    ], 1500, 0.1);
 
     let review;
     try {

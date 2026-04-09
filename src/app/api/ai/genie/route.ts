@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPrisma } from "@/lib/prisma";
+import { callFMAPI } from "@/lib/fmapi";
 
 export const dynamic = "force-dynamic";
 
@@ -45,22 +46,6 @@ REGLAS:
 - Responde siempre en espanol
 - Se conciso y directo`;
 
-async function getLLMResponse(messages: any[]): Promise<string> {
-  const host = process.env.DATABRICKS_HOST || "";
-  const token = process.env.DATABRICKS_TOKEN || "";
-  const baseUrl = host.startsWith("http") ? host : `https://${host}`;
-
-  const response = await fetch(`${baseUrl}/serving-endpoints/databricks-claude-sonnet-4-6/invocations`, {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ messages, max_tokens: 2000, temperature: 0.1 }),
-  });
-
-  if (!response.ok) throw new Error(`FMAPI error ${response.status}`);
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || "";
-}
-
 export async function POST(req: NextRequest) {
   try {
     const { mensaje, historial } = await req.json();
@@ -72,7 +57,7 @@ export async function POST(req: NextRequest) {
       { role: "user", content: mensaje },
     ];
 
-    const content = await getLLMResponse(messages);
+    const content = await callFMAPI(messages, 2000, 0.1);
 
     let parsed;
     try {

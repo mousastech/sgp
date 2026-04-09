@@ -1,29 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { callFMAPI } from "@/lib/fmapi";
 
 export const dynamic = "force-dynamic";
-
-async function getLLMResponse(prompt: string): Promise<string> {
-  const host = process.env.DATABRICKS_HOST || "";
-  const token = process.env.DATABRICKS_TOKEN || "";
-  const baseUrl = host.startsWith("http") ? host : `https://${host}`;
-
-  const response = await fetch(`${baseUrl}/serving-endpoints/databricks-claude-sonnet-4-6/invocations`, {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      messages: [
-        { role: "system", content: "Eres un analista de seguridad HSE para centrales electricas renovables de ENGIE Mexico. Analiza datos de permisos de trabajo y genera insights accionables en espanol. Se conciso y directo. Usa formato con bullets." },
-        { role: "user", content: prompt },
-      ],
-      max_tokens: 1000,
-      temperature: 0.3,
-    }),
-  });
-
-  if (!response.ok) throw new Error(`FMAPI error ${response.status}`);
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || "";
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -49,7 +27,10 @@ Genera insights que incluyan:
 4. Tendencias preocupantes o positivas
 5. Oportunidades de optimizacion`;
 
-    const insights = await getLLMResponse(prompt);
+    const insights = await callFMAPI([
+      { role: "system", content: "Eres un analista de seguridad HSE para centrales electricas renovables de ENGIE Mexico. Analiza datos de permisos de trabajo y genera insights accionables en espanol. Se conciso y directo. Usa formato con bullets." },
+      { role: "user", content: prompt },
+    ], 1000, 0.3);
     return NextResponse.json({ insights });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { callFMAPI } from "@/lib/fmapi";
 
 export const dynamic = "force-dynamic";
 
@@ -27,37 +28,6 @@ Responde SIEMPRE en formato JSON valido con esta estructura:
   "observaciones": "recomendaciones adicionales de seguridad"
 }`;
 
-async function getLLMResponse(prompt: string): Promise<string> {
-  const host = process.env.DATABRICKS_HOST || "";
-  const token = process.env.DATABRICKS_TOKEN || "";
-
-  const baseUrl = host.startsWith("http") ? host : `https://${host}`;
-
-  const response = await fetch(`${baseUrl}/serving-endpoints/databricks-claude-sonnet-4-6/invocations`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: prompt },
-      ],
-      max_tokens: 1500,
-      temperature: 0.2,
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`FMAPI error ${response.status}: ${err}`);
-  }
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || "";
-}
-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -76,7 +46,10 @@ ${norma ? `NORMA INDICADA: ${norma}` : ""}
 
 Genera el JSON con el analisis completo de riesgos, medidas de control, valor de riesgo sugerido, tipos de trabajo especial detectados, si requiere LOTO, y condiciones climaticas a considerar.`;
 
-    const content = await getLLMResponse(prompt);
+    const content = await callFMAPI([
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: prompt },
+    ]);
 
     // Parse JSON from response
     let analysis;
