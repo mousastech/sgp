@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { usePersona } from "@/lib/PersonaContext";
 import { crearCategoria, editarCategoria, desactivarCategoria, crearEquipo, editarEquipo, desactivarEquipo, crearArea, editarArea, desactivarArea, crearEmpleado, editarEmpleado, desactivarEmpleado } from "@/lib/actions/admin";
+import { crearRol, editarRol, desactivarRol } from "@/lib/actions/roles";
 import { Pencil, Trash2, Shield, AlertTriangle } from "lucide-react";
 
 // Puestos oficiales per RENOVABLES-O-PR-01 Anexo 1
@@ -58,15 +59,16 @@ type Props = {
   equipos: { id: number; nombre: string; obligatorio: boolean; categoria: { nombre: string } }[];
   areas: { id: number; nombre: string; ubicacion: string | null }[];
   empleados: { id: number; numeroEmpleado: string; nombreCompleto: string; puesto: string | null; puestoHomologado: string | null; esSupervisor: boolean; email: string | null; area: { nombre: string } | null }[];
+  roles: { id: number; codigo: string; nombre: string; descripcion: string | null; puedeSerSolicitante: boolean; puedeSerResponsable: boolean; puedeSerAutorizador: boolean; esJefePlanta: boolean; esContratista: boolean; puedeAdministrar: boolean }[];
 };
 
-type Tab = "categorias" | "equipos" | "areas" | "empleados";
+type Tab = "roles" | "areas" | "empleados" | "categorias" | "equipos";
 
 const ADMIN_ROLES = ["JEFE_PLANTA", "JEFE_MANTENIMIENTO", "SUPERVISOR_HSE"];
 
-export function AdminPanel({ categorias, equipos, areas, empleados }: Props) {
+export function AdminPanel({ categorias, equipos, areas, empleados, roles }: Props) {
   const { persona } = usePersona();
-  const [tab, setTab] = useState<Tab>("areas");
+  const [tab, setTab] = useState<Tab>("roles");
   const [isPending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
   const [editId, setEditId] = useState<number | null>(null);
@@ -95,6 +97,7 @@ export function AdminPanel({ categorias, equipos, areas, empleados }: Props) {
   }
 
   const TABS: { key: Tab; label: string }[] = [
+    { key: "roles", label: "Roles (Anexo 1)" },
     { key: "areas", label: "Areas / Centrales" },
     { key: "empleados", label: "Empleados" },
     { key: "categorias", label: "Categorias EPP" },
@@ -356,6 +359,91 @@ export function AdminPanel({ categorias, equipos, areas, empleados }: Props) {
             <input name="nombre" placeholder="Nombre del equipo *" required className="block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="obligatorio" value="true" className="rounded" /> Obligatorio</label>
             <button type="submit" disabled={isPending} className="bg-engie-blue text-white font-semibold py-2 px-6 rounded-xl text-sm">Agregar</button>
+          </form>
+        </div>
+      )}
+
+      {/* ═══ ROLES ═══ */}
+      {tab === "roles" && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b"><tr>
+                <th className="text-left p-3 font-semibold text-gray-600">Codigo</th>
+                <th className="text-left p-3 font-semibold text-gray-600">Nombre</th>
+                <th className="text-center p-2 font-semibold text-gray-600 text-[10px]">Solicitante</th>
+                <th className="text-center p-2 font-semibold text-gray-600 text-[10px]">Responsable</th>
+                <th className="text-center p-2 font-semibold text-gray-600 text-[10px]">Autorizador</th>
+                <th className="text-center p-2 font-semibold text-gray-600 text-[10px]">Jefe Planta</th>
+                <th className="text-center p-2 font-semibold text-gray-600 text-[10px]">Contratista</th>
+                <th className="text-center p-2 font-semibold text-gray-600 text-[10px]">Admin</th>
+                <th className="text-right p-3 font-semibold text-gray-600 w-24">Acciones</th>
+              </tr></thead>
+              <tbody className="divide-y divide-gray-100">
+                {roles.map((r) => editId === r.id ? (
+                  <tr key={r.id} className="bg-blue-50">
+                    <td colSpan={9} className="p-3">
+                      <form action={handleAction(editarRol)} className="space-y-3">
+                        <input type="hidden" name="id" value={r.id} />
+                        <div className="grid grid-cols-3 gap-2">
+                          <input name="nombre" defaultValue={r.nombre} required placeholder="Nombre *" className="rounded-lg border-gray-300 text-sm p-2 border" />
+                          <input name="descripcion" defaultValue={r.descripcion || ""} placeholder="Descripcion" className="col-span-2 rounded-lg border-gray-300 text-sm p-2 border" />
+                        </div>
+                        <div className="flex flex-wrap gap-4 text-sm">
+                          <label className="flex items-center gap-1.5"><input type="checkbox" name="puedeSerSolicitante" value="true" defaultChecked={r.puedeSerSolicitante} className="rounded" /> Solicitante</label>
+                          <label className="flex items-center gap-1.5"><input type="checkbox" name="puedeSerResponsable" value="true" defaultChecked={r.puedeSerResponsable} className="rounded" /> Responsable</label>
+                          <label className="flex items-center gap-1.5"><input type="checkbox" name="puedeSerAutorizador" value="true" defaultChecked={r.puedeSerAutorizador} className="rounded text-emerald-600" /> Autorizador</label>
+                          <label className="flex items-center gap-1.5"><input type="checkbox" name="esJefePlanta" value="true" defaultChecked={r.esJefePlanta} className="rounded text-purple-600" /> Jefe Planta</label>
+                          <label className="flex items-center gap-1.5"><input type="checkbox" name="esContratista" value="true" defaultChecked={r.esContratista} className="rounded text-orange-600" /> Contratista</label>
+                          <label className="flex items-center gap-1.5"><input type="checkbox" name="puedeAdministrar" value="true" defaultChecked={r.puedeAdministrar} className="rounded text-red-600" /> Admin</label>
+                        </div>
+                        <div className="flex gap-2">
+                          <button type="submit" disabled={isPending} className="px-4 py-2 bg-engie-blue text-white text-xs font-semibold rounded-lg">Guardar</button>
+                          <button type="button" onClick={() => setEditId(null)} className="px-4 py-2 bg-gray-200 text-gray-600 text-xs font-semibold rounded-lg">Cancelar</button>
+                        </div>
+                      </form>
+                    </td>
+                  </tr>
+                ) : (
+                  <tr key={r.id} className="hover:bg-gray-50">
+                    <td className="p-3 font-mono text-xs text-engie-blue font-bold">{r.codigo}</td>
+                    <td className="p-3">
+                      <p className="font-medium text-sm">{r.nombre}</p>
+                      {r.descripcion && <p className="text-[10px] text-gray-400 truncate max-w-[200px]">{r.descripcion}</p>}
+                    </td>
+                    <td className="p-2 text-center">{r.puedeSerSolicitante ? <span className="text-emerald-500 font-bold">✓</span> : <span className="text-gray-300">—</span>}</td>
+                    <td className="p-2 text-center">{r.puedeSerResponsable ? <span className="text-emerald-500 font-bold">✓</span> : <span className="text-gray-300">—</span>}</td>
+                    <td className="p-2 text-center">{r.puedeSerAutorizador ? <span className="text-emerald-600 font-bold text-lg">✓</span> : <span className="text-red-300">✗</span>}</td>
+                    <td className="p-2 text-center">{r.esJefePlanta ? <span className="text-purple-600 font-bold text-lg">★</span> : <span className="text-gray-300">—</span>}</td>
+                    <td className="p-2 text-center">{r.esContratista ? <span className="text-orange-500 font-bold">✓</span> : <span className="text-gray-300">—</span>}</td>
+                    <td className="p-2 text-center">{r.puedeAdministrar ? <span className="text-red-500 font-bold">✓</span> : <span className="text-gray-300">—</span>}</td>
+                    <td className="p-3 text-right">
+                      <button onClick={() => setEditId(r.id)} className="p-1 hover:bg-gray-100 rounded transition"><Pencil size={14} className="text-gray-400" /></button>
+                      <button onClick={() => { if (confirm("Desactivar este rol?")) { startTransition(async () => { await desactivarRol(r.id); setMsg("Rol desactivado."); }); } }} className="p-1 hover:bg-red-50 rounded transition ml-1"><Trash2 size={14} className="text-red-400" /></button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Add new role */}
+          <form action={handleAction(crearRol)} className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+            <h3 className="text-sm font-bold text-engie-blue">Agregar Nuevo Rol</h3>
+            <div className="grid grid-cols-3 gap-3">
+              <input name="codigo" placeholder="Codigo (ej: COORD_CAMPO) *" required className="rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border font-mono" />
+              <input name="nombre" placeholder="Nombre del rol *" required className="rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
+              <input name="descripcion" placeholder="Descripcion" className="rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
+            </div>
+            <div className="flex flex-wrap gap-4 text-sm">
+              <label className="flex items-center gap-1.5"><input type="checkbox" name="puedeSerSolicitante" value="true" defaultChecked className="rounded" /> Solicitante</label>
+              <label className="flex items-center gap-1.5"><input type="checkbox" name="puedeSerResponsable" value="true" defaultChecked className="rounded" /> Responsable</label>
+              <label className="flex items-center gap-1.5"><input type="checkbox" name="puedeSerAutorizador" value="true" className="rounded" /> Autorizador</label>
+              <label className="flex items-center gap-1.5"><input type="checkbox" name="esJefePlanta" value="true" className="rounded" /> Jefe Planta</label>
+              <label className="flex items-center gap-1.5"><input type="checkbox" name="esContratista" value="true" className="rounded" /> Contratista</label>
+              <label className="flex items-center gap-1.5"><input type="checkbox" name="puedeAdministrar" value="true" className="rounded" /> Admin</label>
+            </div>
+            <button type="submit" disabled={isPending} className="bg-engie-blue text-white font-semibold py-2 px-6 rounded-xl text-sm">Agregar Rol</button>
           </form>
         </div>
       )}

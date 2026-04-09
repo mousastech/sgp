@@ -163,6 +163,23 @@ model Aprobacion {
   @@map("aprobaciones")
 }
 
+model Rol {
+  id                  Int      @id @default(autoincrement())
+  codigo              String   @unique @db.VarChar(30)
+  nombre              String   @db.VarChar(100)
+  descripcion         String?
+  puedeSerSolicitante Boolean  @default(true) @map("puede_ser_solicitante")
+  puedeSerResponsable Boolean  @default(true) @map("puede_ser_responsable")
+  puedeSerAutorizador Boolean  @default(false) @map("puede_ser_autorizador")
+  esJefePlanta        Boolean  @default(false) @map("es_jefe_planta")
+  esContratista       Boolean  @default(false) @map("es_contratista")
+  puedeAdministrar    Boolean  @default(false) @map("puede_administrar")
+  activo              Boolean  @default(true)
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  @@map("roles")
+}
+
 model Evidencia {
   id          Int            @id @default(autoincrement())
   permisoId   Int            @map("permiso_id")

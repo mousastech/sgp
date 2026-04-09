@@ -1,14 +1,16 @@
 export const dynamic = "force-dynamic";
 
 import { getCategorias, getEquipos, getAreas, getEmpleados } from "@/lib/actions/admin";
+import { getRoles } from "@/lib/actions/roles";
 import { AdminPanel } from "./AdminPanel";
 
 export default async function AdminPage() {
-  const [categorias, equipos, areas, empleados] = await Promise.all([
+  const [categorias, equipos, areas, empleados, roles] = await Promise.all([
     getCategorias(),
     getEquipos(),
     getAreas(),
     getEmpleados(),
+    getRoles(),
   ]);
 
   return (
@@ -17,6 +19,7 @@ export default async function AdminPage() {
       equipos={equipos}
       areas={areas}
       empleados={empleados}
+      roles={roles}
     />
   );
 }
