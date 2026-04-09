@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
+  Home,
   ClipboardList,
   ClipboardCheck,
   CheckCircle,
@@ -17,6 +18,12 @@ import {
 } from "lucide-react";
 
 const NAV_SECTIONS = [
+  {
+    title: "INICIO",
+    items: [
+      { href: "/", label: "Inicio", icon: Home },
+    ],
+  },
   {
     title: "OPERACIONES",
     items: [
