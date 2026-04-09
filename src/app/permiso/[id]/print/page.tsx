@@ -11,9 +11,9 @@ const TIPOS_LABEL: Record<string, string> = {
   ICS: "Permiso para Intervencion de ICS", MAQUINARIA_PESADA: "Manejo de Maquinaria Pesada",
 };
 
-function fDate(d: string | null) { return d ? new Date(d).toLocaleDateString("es-MX") : "___________"; }
-function fTime(d: string | null) { return d ? new Date(d).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : "___________"; }
-function fStr(s: string | null | undefined) { return s || "___________"; }
+function fDate(d: string | null) { return d ? new Date(d).toLocaleDateString("es-MX") : "\u00A0"; }
+function fTime(d: string | null) { return d ? new Date(d).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : "\u00A0"; }
+function fStr(s: string | null | undefined) { return s || "\u00A0"; }
 
 export default async function PrintPermitPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -42,9 +42,10 @@ export default async function PrintPermitPage({ params }: { params: Promise<{ id
         .check-table td, .check-table th { border: 1px solid #ccc; padding: 4px 8px; font-size: 10px; }
         .check-table th { background: #f0f4f8; text-align: left; }
         .check-table .center { text-align: center; width: 40px; }
-        .sig-row { display: flex; gap: 20px; margin: 8px 0; align-items: flex-end; }
-        .sig-row .sig { flex: 2; border-bottom: 1px solid #333; min-height: 20px; }
-        .sig-row .sig-label { font-size: 9px; color: #666; }
+        .sig-row { display: flex; gap: 20px; margin: 10px 0; }
+        .sig-row > div { flex: 2; }
+        .sig-row .sig-label { font-size: 9px; color: #666; display: block; margin-bottom: 2px; }
+        .sig-row .sig-val { font-size: 11px; font-weight: 600; border-bottom: 1px solid #999; min-height: 18px; padding: 2px 0; }
         .sig-row .sig-date { flex: 1; }
         .note { font-size: 9px; color: #666; font-style: italic; margin: 4px 0; }
         .footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #ccc; font-size: 9px; color: #999; text-align: center; }
@@ -85,13 +86,13 @@ export default async function PrintPermitPage({ params }: { params: Promise<{ id
         </div>
 
         <div className="sig-row">
-          <div><span className="sig-label">Nombre y firma del Solicitante ENGIE:</span><div className="sig">{fStr(p.solicitanteEngie || p.empleado?.nombreCompleto)}</div></div>
+          <div><span className="sig-label">Nombre y firma del Solicitante ENGIE:</span><div className="sig-val">{fStr(p.solicitanteEngie || p.empleado?.nombreCompleto)}</div></div>
         </div>
         <div className="sig-row">
-          <div><span className="sig-label">Nombre y Firma de Persona Responsable del Trabajo:</span><div className="sig">{fStr(p.responsableTrabajo)}</div></div>
+          <div><span className="sig-label">Nombre y Firma de Persona Responsable del Trabajo:</span><div className="sig-val">{fStr(p.responsableTrabajo)}</div></div>
         </div>
         <div className="sig-row">
-          <div><span className="sig-label">Departamento ENGIE o Nombre del Contratista Responsable:</span><div className="sig">{fStr(p.departamentoContratista)}</div></div>
+          <div><span className="sig-label">Departamento ENGIE o Nombre del Contratista Responsable:</span><div className="sig-val">{fStr(p.departamentoContratista)}</div></div>
         </div>
 
         {/* II. Analisis de Seguridad */}
@@ -135,22 +136,22 @@ export default async function PrintPermitPage({ params }: { params: Promise<{ id
         {/* IV. Autorizacion */}
         <h2>IV. Autorizacion del Permiso de Trabajo</h2>
         <div className="sig-row">
-          <div style={{ flex: 2 }}><span className="sig-label">Nombre y firma del Autorizador:</span><div className="sig">{autorizacion ? autorizacion.supervisor?.nombreCompleto : ""}</div></div>
-          <div className="sig-date"><span className="sig-label">Fecha:</span><div className="sig">{autorizacion ? fDate(autorizacion.fechaFirma) : ""}</div></div>
-          <div className="sig-date"><span className="sig-label">Hora:</span><div className="sig">{autorizacion ? fTime(autorizacion.fechaFirma) : ""}</div></div>
+          <div style={{ flex: 2 }}><span className="sig-label">Nombre y firma del Autorizador:</span><div className="sig-val">{autorizacion ? autorizacion.supervisor?.nombreCompleto : ""}</div></div>
+          <div className="sig-date"><span className="sig-label">Fecha:</span><div className="sig-val">{autorizacion ? fDate(autorizacion.fechaFirma) : ""}</div></div>
+          <div className="sig-date"><span className="sig-label">Hora:</span><div className="sig-val">{autorizacion ? fTime(autorizacion.fechaFirma) : ""}</div></div>
         </div>
 
         {/* V. Cierre */}
         <h2>V. Cierre del Permiso del Trabajo</h2>
         <div className="sig-row">
-          <div style={{ flex: 2 }}><span className="sig-label">Nombre y firma del Responsable del Trabajo:</span><div className="sig">{fStr(p.cierreResponsable)}</div></div>
-          <div className="sig-date"><span className="sig-label">Fecha:</span><div className="sig">{p.cierreFechaResponsable ? fDate(p.cierreFechaResponsable) : ""}</div></div>
-          <div className="sig-date"><span className="sig-label">Hora:</span><div className="sig">{p.cierreFechaResponsable ? fTime(p.cierreFechaResponsable) : ""}</div></div>
+          <div style={{ flex: 2 }}><span className="sig-label">Nombre y firma del Responsable del Trabajo:</span><div className="sig-val">{fStr(p.cierreResponsable)}</div></div>
+          <div className="sig-date"><span className="sig-label">Fecha:</span><div className="sig-val">{p.cierreFechaResponsable ? fDate(p.cierreFechaResponsable) : ""}</div></div>
+          <div className="sig-date"><span className="sig-label">Hora:</span><div className="sig-val">{p.cierreFechaResponsable ? fTime(p.cierreFechaResponsable) : ""}</div></div>
         </div>
         <div className="sig-row">
-          <div style={{ flex: 2 }}><span className="sig-label">Nombre y firma del Autorizador:</span><div className="sig">{fStr(p.cierreAutorizador)}</div></div>
-          <div className="sig-date"><span className="sig-label">Fecha:</span><div className="sig">{p.cierreFechaAutorizador ? fDate(p.cierreFechaAutorizador) : ""}</div></div>
-          <div className="sig-date"><span className="sig-label">Hora:</span><div className="sig">{p.cierreFechaAutorizador ? fTime(p.cierreFechaAutorizador) : ""}</div></div>
+          <div style={{ flex: 2 }}><span className="sig-label">Nombre y firma del Autorizador:</span><div className="sig-val">{fStr(p.cierreAutorizador)}</div></div>
+          <div className="sig-date"><span className="sig-label">Fecha:</span><div className="sig-val">{p.cierreFechaAutorizador ? fDate(p.cierreFechaAutorizador) : ""}</div></div>
+          <div className="sig-date"><span className="sig-label">Hora:</span><div className="sig-val">{p.cierreFechaAutorizador ? fTime(p.cierreFechaAutorizador) : ""}</div></div>
         </div>
         <p className="note" style={{ fontWeight: 600 }}>El Responsable del Trabajo y el Autorizador garantizan las adecuadas condiciones de orden y limpieza del area de trabajo y son conscientes de las condiciones finales del equipo, sistema o instalaciones.</p>
 
