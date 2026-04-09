@@ -334,22 +334,56 @@ export async function reanudarPermiso(formData: FormData) {
   return { success: true, folio: permiso.folio };
 }
 
-// --- 6.11 + 6.12 Cerrar Permiso (EN_EJECUCION|SUSPENDIDO → CERRADO) ---
+// --- 6.11 Cierre Paso 1: Responsable del Trabajo (EN_EJECUCION|SUSPENDIDO → CIERRE_RESPONSABLE) ---
 
-export async function cerrarPermiso(formData: FormData) {
+export async function cierreResponsable(formData: FormData) {
   const permisoId = Number(formData.get("permisoId"));
-  const supervisorId = Number(formData.get("supervisorId"));
-  const condicionesOk = formData.get("condicionesOk") === "true";
+  const nombreResponsable = formData.get("nombreResponsable") as string;
   const observaciones = formData.get("observaciones") as string;
-  const lotoRetirado = formData.get("lotoRetirado") === "true";
+
+  if (!nombreResponsable?.trim()) {
+    return { success: false, error: "El nombre del Responsable del Trabajo es obligatorio." };
+  }
 
   const permiso = await (await getPrisma()).permisoTrabajo.findUnique({ where: { id: permisoId } });
   if (!permiso || !["EN_EJECUCION", "SUSPENDIDO"].includes(permiso.estado)) {
     return { success: false, error: "El permiso no puede cerrarse en su estado actual." };
   }
 
+  await (await getPrisma()).permisoTrabajo.update({
+    where: { id: permisoId },
+    data: {
+      estado: "CIERRE_RESPONSABLE",
+      cierreResponsable: nombreResponsable.trim(),
+      cierreFechaResponsable: new Date(),
+      observacionesCierre: observaciones || null,
+      updatedAt: new Date(),
+    },
+  });
+
+  await audit("permisos_trabajo", permisoId, "CIERRE_RESPONSABLE",
+    nombreResponsable.trim(),
+    { folio: permiso.folio, observaciones });
+
+  revalidateAll();
+  return { success: true, folio: permiso.folio };
+}
+
+// --- 6.12 Cierre Paso 2: Autorizador (CIERRE_RESPONSABLE → CERRADO) ---
+
+export async function cierreAutorizador(formData: FormData) {
+  const permisoId = Number(formData.get("permisoId"));
+  const supervisorId = Number(formData.get("supervisorId"));
+  const condicionesOk = formData.get("condicionesOk") === "true";
+  const lotoRetirado = formData.get("lotoRetirado") === "true";
+
+  const permiso = await (await getPrisma()).permisoTrabajo.findUnique({ where: { id: permisoId } });
+  if (!permiso || permiso.estado !== "CIERRE_RESPONSABLE") {
+    return { success: false, error: "El permiso no esta en espera de cierre del Autorizador." };
+  }
+
   if (permiso.requiereLoto && !lotoRetirado) {
-    return { success: false, error: "Debe confirmar el retiro del LOTO antes de cerrar." };
+    return { success: false, error: "Debe confirmar el retiro del LOTO antes de cerrar (sec. 6.13)." };
   }
 
   const supervisor = await (await getPrisma()).empleado.findUnique({ where: { id: supervisorId } });
@@ -358,17 +392,36 @@ export async function cerrarPermiso(formData: FormData) {
     where: { id: permisoId },
     data: {
       estado: "CERRADO",
+      cierreAutorizador: supervisor?.nombreCompleto || `Supervisor #${supervisorId}`,
+      cierreFechaAutorizador: new Date(),
       fechaCierre: new Date(),
       condicionesCierreOk: condicionesOk,
-      observacionesCierre: observaciones || null,
       updatedAt: new Date(),
     },
   });
 
   await audit("permisos_trabajo", permisoId, "CERRADO",
     supervisor?.nombreCompleto || `Supervisor #${supervisorId}`,
-    { folio: permiso.folio, condicionesOk, lotoRetirado });
+    { folio: permiso.folio, condicionesOk, lotoRetirado, cierreResponsable: permiso.cierreResponsable });
 
   revalidateAll();
   return { success: true, folio: permiso.folio };
+}
+
+// Legacy wrapper for direct close (from SUSPENDIDO without resuming)
+export async function cerrarPermiso(formData: FormData) {
+  const permisoId = Number(formData.get("permisoId"));
+  const permiso = await (await getPrisma()).permisoTrabajo.findUnique({ where: { id: permisoId } });
+  if (permiso?.estado === "CIERRE_RESPONSABLE") {
+    return cierreAutorizador(formData);
+  }
+  // For SUSPENDIDO direct close, do both steps at once
+  const nombreResponsable = formData.get("nombreResponsable") as string || "Cierre desde suspension";
+  const fd1 = new FormData();
+  fd1.set("permisoId", String(permisoId));
+  fd1.set("nombreResponsable", nombreResponsable);
+  fd1.set("observaciones", formData.get("observaciones") as string || "");
+  const r1 = await cierreResponsable(fd1);
+  if (!r1.success) return r1;
+  return cierreAutorizador(formData);
 }

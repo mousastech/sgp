@@ -11,6 +11,8 @@ import {
   suspenderPermiso,
   reanudarPermiso,
   cerrarPermiso,
+  cierreResponsable,
+  cierreAutorizador,
   getPermisosActivosEnArea,
 } from "@/lib/actions/flujo";
 import {
@@ -52,6 +54,8 @@ type Permiso = {
   motivoSuspension: string | null;
   erumCompletado: boolean;
   extensionDias: number;
+  cierreResponsable: string | null;
+  cierreFechaResponsable: Date | null;
   coordenadasLatCaptura: { toString(): string } | null;
   coordenadasLonCaptura: { toString(): string } | null;
   empleado: { nombreCompleto: string; numeroEmpleado: string };
@@ -74,13 +78,14 @@ const ESTADO_CONFIG: Record<string, { label: string; color: string; bg: string; 
   EN_REVISION:   { label: "En Revision",   color: "text-indigo-700", bg: "bg-indigo-100", border: "border-indigo-200" },
   AUTORIZADO:    { label: "Autorizados",   color: "text-emerald-700",bg: "bg-emerald-100",border: "border-emerald-200" },
   EN_EJECUCION:  { label: "En Ejecucion",  color: "text-orange-700", bg: "bg-orange-100", border: "border-orange-200" },
+  CIERRE_RESPONSABLE: { label: "Cierre Pendiente", color: "text-teal-700", bg: "bg-teal-100", border: "border-teal-200" },
   CERRADO:       { label: "Cerrados",      color: "text-gray-700",   bg: "bg-gray-100",   border: "border-gray-200" },
   DEVUELTO:      { label: "Devueltos",     color: "text-yellow-700", bg: "bg-yellow-100", border: "border-yellow-200" },
   RECHAZADO:     { label: "Rechazados",    color: "text-red-700",    bg: "bg-red-100",    border: "border-red-200" },
   SUSPENDIDO:    { label: "Suspendidos",   color: "text-rose-700",   bg: "bg-rose-100",   border: "border-rose-200" },
 };
 
-const PIPELINE_STATES = ["ENVIADO", "EN_REVISION", "AUTORIZADO", "EN_EJECUCION", "CERRADO"];
+const PIPELINE_STATES = ["ENVIADO", "EN_REVISION", "AUTORIZADO", "EN_EJECUCION", "CIERRE_RESPONSABLE", "CERRADO"];
 const OTHER_STATES = ["DEVUELTO", "RECHAZADO", "SUSPENDIDO"];
 
 const TIPO_ESPECIAL_LABELS: Record<string, string> = {
@@ -408,6 +413,35 @@ export function GestionPanel({ supervisores, permisos }: { supervisores: Supervi
                     <ActionFormEjecucion pt={pt} isPending={isPending} runAction={runAction} />
                   )}
 
+                  {/* CIERRE_RESPONSABLE: Autorizador confirma cierre */}
+                  {pt.estado === "CIERRE_RESPONSABLE" && (
+                    <div className="border-t border-gray-100 pt-4 space-y-3">
+                      <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 text-sm">
+                        <p className="font-semibold text-teal-800">Paso 1 completado — Responsable firmo el cierre</p>
+                        <p className="text-teal-600 text-xs mt-1">Firmado por: {pt.cierreResponsable} el {pt.cierreFechaResponsable ? new Date(pt.cierreFechaResponsable).toLocaleString("es-MX") : ""}</p>
+                      </div>
+                      <form onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); fd.set("permisoId", String(pt.id)); runAction(cierreAutorizador, fd); }}
+                        className="space-y-3 bg-gray-50 border border-gray-200 rounded-xl p-4">
+                        <p className="text-xs text-gray-700 font-semibold">Paso 2 de 2 — Firma del Autorizador (sec. 6.12)</p>
+                        <p className="text-xs text-gray-500">Confirme que las condiciones de orden, limpieza y estado final del area/equipo son adecuadas.</p>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" name="condicionesOk" value="true" className="w-4 h-4 rounded border-gray-300 text-engie-blue" />
+                          <span className="text-sm text-gray-700">Las condiciones finales del area son adecuadas</span>
+                        </label>
+                        {pt.requiereLoto && (
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="lotoRetirado" value="true" className="w-4 h-4 rounded border-gray-300 text-orange-600" />
+                            <span className="text-sm text-orange-700 font-semibold">Confirmo retiro del LOTO (sec. 6.13)</span>
+                          </label>
+                        )}
+                        <button type="submit" disabled={isPending}
+                          className="w-full bg-gray-700 text-white font-semibold py-2.5 rounded-xl transition disabled:opacity-50 flex items-center justify-center gap-2">
+                          <Archive size={14} /> {isPending ? "..." : "Confirmar Cierre (Autorizador)"}
+                        </button>
+                      </form>
+                    </div>
+                  )}
+
                   {/* SUSPENDIDO: Reanudar / Cerrar */}
                   {pt.estado === "SUSPENDIDO" && (
                     <ActionFormSuspendido pt={pt} isPending={isPending} runAction={runAction} />
@@ -574,23 +608,15 @@ function ActionFormEjecucion({ pt, isPending, runAction }: { pt: Permiso; isPend
       )}
 
       {mode === "cerrar" && (
-        <form onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); fd.set("permisoId", String(pt.id)); runAction(cerrarPermiso, fd); }}
-          className="space-y-3 bg-gray-50 border border-gray-200 rounded-xl p-4">
-          <p className="text-xs text-gray-600">Revision posterior al trabajo (6.11): valide condiciones de orden, limpieza y estado final de equipos.</p>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" name="condicionesOk" value="true" className="w-4 h-4 rounded border-gray-300 text-engie-blue" />
-            <span className="text-sm text-gray-700">Condiciones finales del area son adecuadas</span>
-          </label>
-          {pt.requiereLoto && (
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" name="lotoRetirado" value="true" className="w-4 h-4 rounded border-gray-300 text-orange-600" />
-              <span className="text-sm text-orange-700 font-semibold">Confirmo retiro del LOTO (6.13)</span>
-            </label>
-          )}
-          <textarea name="observaciones" placeholder="Observaciones de cierre..." rows={2} className="block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
+        <form onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); fd.set("permisoId", String(pt.id)); runAction(cierreResponsable, fd); }}
+          className="space-y-3 bg-teal-50 border border-teal-200 rounded-xl p-4">
+          <p className="text-xs text-teal-700 font-semibold">Paso 1 de 2 — Firma del Responsable del Trabajo (sec. 6.11)</p>
+          <p className="text-xs text-teal-600">El Responsable declara la finalizacion del trabajo. Luego el Autorizador confirmara las condiciones finales.</p>
+          <input type="text" name="nombreResponsable" placeholder="Nombre del Responsable del Trabajo *" required className="block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
+          <textarea name="observaciones" placeholder="Observaciones de cierre (condiciones finales, estado del area)..." rows={2} className="block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
           <button type="submit" disabled={isPending}
-            className="w-full bg-gray-700 text-white font-semibold py-2.5 rounded-xl transition disabled:opacity-50 flex items-center justify-center gap-2">
-            <Archive size={14} /> {isPending ? "..." : "Cerrar Permiso de Trabajo"}
+            className="w-full bg-teal-600 text-white font-semibold py-2.5 rounded-xl transition disabled:opacity-50 flex items-center justify-center gap-2">
+            <Archive size={14} /> {isPending ? "..." : "Firmar Cierre (Responsable)"}
           </button>
         </form>
       )}

@@ -79,19 +79,20 @@ export async function crearEmpleado(formData: FormData) {
 // --- Dashboard Stats ---
 export async function getDashboardStats() {
   const prisma = await getPrisma();
-  const [total, enviados, enRevision, autorizados, enEjecucion, cerrados, rechazados, devueltos, suspendidos, borradores] = await Promise.all([
+  const [total, enviados, enRevision, autorizados, enEjecucion, cierreResp, cerrados, rechazados, devueltos, suspendidos, borradores] = await Promise.all([
     prisma.permisoTrabajo.count(),
     prisma.permisoTrabajo.count({ where: { estado: "ENVIADO" } }),
     prisma.permisoTrabajo.count({ where: { estado: "EN_REVISION" } }),
     prisma.permisoTrabajo.count({ where: { estado: "AUTORIZADO" } }),
     prisma.permisoTrabajo.count({ where: { estado: "EN_EJECUCION" } }),
+    prisma.permisoTrabajo.count({ where: { estado: "CIERRE_RESPONSABLE" } }),
     prisma.permisoTrabajo.count({ where: { estado: "CERRADO" } }),
     prisma.permisoTrabajo.count({ where: { estado: "RECHAZADO" } }),
     prisma.permisoTrabajo.count({ where: { estado: "DEVUELTO" } }),
     prisma.permisoTrabajo.count({ where: { estado: "SUSPENDIDO" } }),
     prisma.permisoTrabajo.count({ where: { estado: "BORRADOR" } }),
   ]);
-  return { total, enviados, enRevision, autorizados, enEjecucion, cerrados, rechazados, devueltos, suspendidos, borradores };
+  return { total, enviados, enRevision, autorizados, enEjecucion, cierreResp, cerrados, rechazados, devueltos, suspendidos, borradores };
 }
 
 export async function getPermisosRecientes() {

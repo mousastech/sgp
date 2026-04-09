@@ -105,6 +105,11 @@ model PermisoTrabajo {
   extensionDias         Int            @default(0) @map("extension_dias")
   observacionesCierre   String?        @map("observaciones_cierre")
   condicionesCierreOk   Boolean?       @map("condiciones_cierre_ok")
+  // --- Apartado V. Cierre doble firma (IN01 campos 21-26) ---
+  cierreResponsable     String?        @map("cierre_responsable") @db.VarChar(200)
+  cierreFechaResponsable DateTime?     @map("cierre_fecha_responsable")
+  cierreAutorizador     String?        @map("cierre_autorizador") @db.VarChar(200)
+  cierreFechaAutorizador DateTime?     @map("cierre_fecha_autorizador")
   createdAt             DateTime       @default(now()) @map("created_at")
   updatedAt             DateTime       @default(now()) @map("updated_at")
   empleado              Empleado       @relation(fields: [empleadoId], references: [id])
