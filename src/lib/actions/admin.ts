@@ -103,11 +103,10 @@ export async function desactivarArea(id: number) {
 export async function editarEmpleado(formData: FormData) {
   const id = Number(formData.get("id"));
   const nombreCompleto = (formData.get("nombreCompleto") as string)?.trim();
-  const puesto = (formData.get("puesto") as string)?.trim() || null;
+  const { puesto, puestoHomologado } = derivePuesto(formData);
   const email = (formData.get("email") as string)?.trim() || null;
   const areaId = Number(formData.get("areaId")) || null;
   const esSupervisor = formData.get("esSupervisor") === "true";
-  const puestoHomologado = (formData.get("puestoHomologado") as string)?.trim() || null;
   if (!nombreCompleto) return { error: "El nombre es obligatorio." };
   const roles = puestoHomologado ? ROLE_MATRIX[puestoHomologado] : null;
   await (await getPrisma()).empleado.update({
@@ -151,14 +150,33 @@ const ROLE_MATRIX: Record<string, { solicitante: boolean; responsable: boolean; 
   CONTRATISTA:        { solicitante: false, responsable: true,  autorizador: false, jefePlanta: false, contratista: true  },
 };
 
+const PUESTO_LABELS: Record<string, string> = {
+  JEFE_PLANTA: "Jefe de Planta", JEFE_MANTENIMIENTO: "Jefe de Mantenimiento",
+  SUPERVISOR_HSE: "Supervisor de HSE", ING_CONFIABILIDAD: "Ingeniero de Confiabilidad",
+  TEC_MANTENIMIENTO: "Tecnico de Mantenimiento", AUX_MANTENIMIENTO: "Auxiliar de Mantenimiento",
+  CONTRATISTA: "Contratista",
+};
+
+function derivePuesto(formData: FormData): { puesto: string | null; puestoHomologado: string | null } {
+  let puestoHomologado = (formData.get("puestoHomologado") as string)?.trim() || null;
+  const puestoOtro = (formData.get("puestoOtro") as string)?.trim() || null;
+
+  if (puestoHomologado === "OTRO") {
+    return { puesto: puestoOtro || "Otro", puestoHomologado: null };
+  }
+  if (puestoHomologado && PUESTO_LABELS[puestoHomologado]) {
+    return { puesto: PUESTO_LABELS[puestoHomologado], puestoHomologado };
+  }
+  return { puesto: null, puestoHomologado: null };
+}
+
 export async function crearEmpleado(formData: FormData) {
   const numeroEmpleado = (formData.get("numeroEmpleado") as string)?.trim();
   const nombreCompleto = (formData.get("nombreCompleto") as string)?.trim();
-  const puesto = (formData.get("puesto") as string)?.trim() || null;
+  const { puesto, puestoHomologado } = derivePuesto(formData);
   const email = (formData.get("email") as string)?.trim() || null;
   const areaId = Number(formData.get("areaId")) || null;
   const esSupervisor = formData.get("esSupervisor") === "true";
-  const puestoHomologado = (formData.get("puestoHomologado") as string)?.trim() || null;
   if (!numeroEmpleado || !nombreCompleto) return { error: "Número y nombre son obligatorios." };
 
   // Auto-derive role permissions from puestoHomologado

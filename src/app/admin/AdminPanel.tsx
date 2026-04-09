@@ -5,6 +5,54 @@ import { usePersona } from "@/lib/PersonaContext";
 import { crearCategoria, editarCategoria, desactivarCategoria, crearEquipo, editarEquipo, desactivarEquipo, crearArea, editarArea, desactivarArea, crearEmpleado, editarEmpleado, desactivarEmpleado } from "@/lib/actions/admin";
 import { Pencil, Trash2, Shield, AlertTriangle } from "lucide-react";
 
+// Puestos oficiales per RENOVABLES-O-PR-01 Anexo 1
+const PUESTOS_OFICIALES = [
+  { value: "JEFE_PLANTA", label: "Jefe de Planta" },
+  { value: "JEFE_MANTENIMIENTO", label: "Jefe de Mantenimiento" },
+  { value: "SUPERVISOR_HSE", label: "Supervisor de HSE" },
+  { value: "ING_CONFIABILIDAD", label: "Ingeniero de Confiabilidad" },
+  { value: "TEC_MANTENIMIENTO", label: "Tecnico de Mantenimiento" },
+  { value: "AUX_MANTENIMIENTO", label: "Auxiliar de Mantenimiento" },
+  { value: "CONTRATISTA", label: "Contratista" },
+  { value: "OTRO", label: "Otro (especifique)" },
+];
+
+function PuestoSelect({ name, defaultValue, defaultOtro, className }: {
+  name: string;
+  defaultValue?: string | null;
+  defaultOtro?: string | null;
+  className?: string;
+}) {
+  const isOtro = defaultValue === "OTRO" || (defaultValue && !PUESTOS_OFICIALES.some(p => p.value === defaultValue));
+  const [showOtro, setShowOtro] = useState(isOtro);
+  const [otroVal, setOtroVal] = useState(defaultOtro || (isOtro ? defaultValue : "") || "");
+
+  return (
+    <div className="space-y-2">
+      <select
+        name={name}
+        defaultValue={defaultValue && PUESTOS_OFICIALES.some(p => p.value === defaultValue) ? defaultValue : isOtro ? "OTRO" : ""}
+        onChange={(e) => setShowOtro(e.target.value === "OTRO")}
+        className={className || "rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border w-full"}
+      >
+        <option value="">Seleccionar puesto *</option>
+        {PUESTOS_OFICIALES.map((p) => (
+          <option key={p.value} value={p.value}>{p.label}</option>
+        ))}
+      </select>
+      {showOtro && (
+        <input
+          name="puestoOtro"
+          value={otroVal}
+          onChange={(e) => setOtroVal(e.target.value)}
+          placeholder="Especifique el puesto..."
+          className={className || "rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border w-full"}
+        />
+      )}
+    </div>
+  );
+}
+
 type Props = {
   categorias: { id: number; nombre: string; descripcion: string | null }[];
   equipos: { id: number; nombre: string; obligatorio: boolean; categoria: { nombre: string } }[];
@@ -166,21 +214,11 @@ export function AdminPanel({ categorias, equipos, areas, empleados }: Props) {
                       <form action={handleAction(editarEmpleado)} className="grid grid-cols-3 gap-2">
                         <input type="hidden" name="id" value={e.id} />
                         <input name="nombreCompleto" defaultValue={e.nombreCompleto} required placeholder="Nombre *" className="rounded-lg border-gray-300 text-sm p-2 border" />
-                        <input name="puesto" defaultValue={e.puesto || ""} placeholder="Puesto" className="rounded-lg border-gray-300 text-sm p-2 border" />
+                        <PuestoSelect name="puestoHomologado" defaultValue={e.puestoHomologado} defaultOtro={e.puesto} className="rounded-lg border-gray-300 text-sm p-2 border w-full" />
                         <input name="email" defaultValue={e.email || ""} placeholder="Email" className="rounded-lg border-gray-300 text-sm p-2 border" />
                         <select name="areaId" defaultValue={""} className="rounded-lg border-gray-300 text-sm p-2 border">
                           <option value="">(Sin area)</option>
                           {areas.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
-                        </select>
-                        <select name="puestoHomologado" defaultValue={e.puestoHomologado || ""} className="rounded-lg border-gray-300 text-sm p-2 border">
-                          <option value="">Puesto homologado</option>
-                          <option value="JEFE_PLANTA">Jefe de Planta</option>
-                          <option value="JEFE_MANTENIMIENTO">Jefe de Mantenimiento</option>
-                          <option value="SUPERVISOR_HSE">Supervisor HSE</option>
-                          <option value="ING_CONFIABILIDAD">Ing. de Confiabilidad</option>
-                          <option value="TEC_MANTENIMIENTO">Tec. de Mantenimiento</option>
-                          <option value="AUX_MANTENIMIENTO">Aux. de Mantenimiento</option>
-                          <option value="CONTRATISTA">Contratista</option>
                         </select>
                         <label className="flex items-center gap-2 text-sm p-2"><input type="checkbox" name="esSupervisor" value="true" defaultChecked={e.esSupervisor} className="rounded" /> Supervisor</label>
                         <div className="col-span-3 flex gap-2">
@@ -214,21 +252,11 @@ export function AdminPanel({ categorias, equipos, areas, empleados }: Props) {
             <div className="grid grid-cols-2 gap-3">
               <input name="numeroEmpleado" placeholder="Numero empleado *" required className="rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
               <input name="nombreCompleto" placeholder="Nombre completo *" required className="rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
-              <input name="puesto" placeholder="Puesto" className="rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
+              <PuestoSelect name="puestoHomologado" />
               <input name="email" type="email" placeholder="Email corporativo" className="rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
               <select name="areaId" className="rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border">
                 <option value="">(Sin area)</option>
                 {areas.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
-              </select>
-              <select name="puestoHomologado" className="rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border">
-                <option value="">Puesto homologado (Anexo 1)</option>
-                <option value="JEFE_PLANTA">Jefe de Planta</option>
-                <option value="JEFE_MANTENIMIENTO">Jefe de Mantenimiento</option>
-                <option value="SUPERVISOR_HSE">Supervisor HSE</option>
-                <option value="ING_CONFIABILIDAD">Ing. de Confiabilidad</option>
-                <option value="TEC_MANTENIMIENTO">Tec. de Mantenimiento</option>
-                <option value="AUX_MANTENIMIENTO">Aux. de Mantenimiento</option>
-                <option value="CONTRATISTA">Contratista</option>
               </select>
               <label className="flex items-center gap-2 text-sm p-2.5"><input type="checkbox" name="esSupervisor" value="true" className="rounded" /> Es supervisor</label>
             </div>
