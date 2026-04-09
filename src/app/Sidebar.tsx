@@ -11,6 +11,7 @@ import {
   CheckCircle,
   BarChart3,
   BookOpen,
+  MessageSquare,
   Settings,
   Menu,
   X,
@@ -40,6 +41,12 @@ const NAV_SECTIONS = [
     items: [
       { href: "/dashboard", label: "Dashboard HSE", icon: BarChart3 },
       { href: "/bitacora", label: "Bitacora de Permisos", icon: BookOpen },
+    ],
+  },
+  {
+    title: "IA",
+    items: [
+      { href: "/genie", label: "Genie de Seguridad", icon: MessageSquare },
     ],
   },
   {
