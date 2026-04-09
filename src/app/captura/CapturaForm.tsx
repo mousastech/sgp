@@ -33,6 +33,8 @@ export function CapturaForm({ empleados, areas }: Props) {
   const [result, setResult] = useState<{ success?: boolean; folio?: string; estado?: string; errors?: string[]; warning?: string } | null>(null);
   const [tiposEspecial, setTiposEspecial] = useState<Record<string, boolean>>({});
   const [warn24h, setWarn24h] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResult, setAiResult] = useState<any>(null);
   const [requiereLoto, setRequiereLoto] = useState(false);
   const [geo, setGeo] = useState<{ lat: number; lon: number } | null>(null);
   const [geoStatus, setGeoStatus] = useState<string>("Obteniendo ubicacion...");
@@ -230,10 +232,82 @@ export function CapturaForm({ empleados, areas }: Props) {
         </section>
 
         {/* ═══════════ APARTADO II. ANALISIS DE SEGURIDAD ═══════════ */}
-        <div className="bg-red-50 border-l-4 border-red-500 rounded-r-xl px-4 py-2">
-          <h3 className="text-base font-bold text-red-700">II. Analisis de Seguridad</h3>
-          <p className="text-xs text-red-400">Seccion 6.2 — Resultado del analisis de riesgos SEGURIDAD-PR-02-FO01</p>
+        <div className="bg-red-50 border-l-4 border-red-500 rounded-r-xl px-4 py-2 flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-bold text-red-700">II. Analisis de Seguridad</h3>
+            <p className="text-xs text-red-400">Seccion 6.2 — Resultado del analisis de riesgos SEGURIDAD-PR-02-FO01</p>
+          </div>
+          <button
+            type="button"
+            disabled={aiLoading}
+            onClick={async () => {
+              const form = document.querySelector("form") as HTMLFormElement;
+              const fd = new FormData(form);
+              const actividad = fd.get("actividadEspecifica") as string;
+              if (!actividad?.trim()) { alert("Primero describa la actividad en el Apartado I"); return; }
+              setAiLoading(true);
+              setAiResult(null);
+              try {
+                const res = await fetch("/api/ai/riesgos", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    actividad,
+                    pasos: fd.get("descripcionPasos") as string,
+                    area: form.querySelector<HTMLSelectElement>("[name=areaId]")?.selectedOptions[0]?.text || "",
+                    norma: fd.get("normaAplicable") as string,
+                  }),
+                });
+                const data = await res.json();
+                if (data.error) { alert(data.error); return; }
+                setAiResult(data);
+                // Auto-fill fields
+                const setVal = (name: string, val: string) => {
+                  const el = form.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${name}"]`);
+                  if (el && val) { el.value = val; el.dispatchEvent(new Event("input", { bubbles: true })); }
+                };
+                if (data.riesgos) setVal("riesgosIdentificados", data.riesgos);
+                if (data.medidasControl) setVal("medidasControl", data.medidasControl);
+                if (data.valorRiesgoSugerido) setVal("valorRiesgoMax", String(data.valorRiesgoSugerido));
+                if (data.condicionesClimaticas) setVal("condicionesClimaticas", data.condicionesClimaticas);
+                // Auto-check special work types
+                if (data.tiposEspeciales?.length > 0) {
+                  const newTipos = { ...tiposEspecial };
+                  data.tiposEspeciales.forEach((t: string) => { newTipos[t] = true; });
+                  setTiposEspecial(newTipos);
+                }
+                if (data.requiereLoto) setRequiereLoto(true);
+              } catch (e: any) {
+                alert("Error al conectar con IA: " + e.message);
+              } finally {
+                setAiLoading(false);
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-semibold rounded-xl hover:from-indigo-700 hover:to-purple-700 shadow-md transition-all disabled:opacity-50"
+          >
+            {aiLoading ? (
+              <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Analizando...</>
+            ) : (
+              <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Analizar con IA</>
+            )}
+          </button>
         </div>
+
+        {aiResult && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 space-y-2">
+            <div className="flex items-center gap-2 mb-2">
+              <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              <span className="text-sm font-bold text-indigo-800">Analisis de IA completado</span>
+              <span className="text-[10px] text-indigo-400">Powered by Claude Sonnet — Databricks FMAPI</span>
+            </div>
+            {aiResult.observaciones && <p className="text-xs text-indigo-700 bg-white rounded-lg p-2 border border-indigo-100">{aiResult.observaciones}</p>}
+            {aiResult.tiposEspeciales?.length > 0 && (
+              <p className="text-xs text-purple-700">Tipos especiales detectados: <strong>{aiResult.tiposEspeciales.join(", ")}</strong></p>
+            )}
+            {aiResult.requiereLoto && <p className="text-xs text-yellow-700 font-semibold">LOTO requerido segun el analisis</p>}
+            <p className="text-[10px] text-indigo-400">Los campos fueron auto-completados. Revise y ajuste segun su criterio profesional.</p>
+          </div>
+        )}
 
         <section className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
