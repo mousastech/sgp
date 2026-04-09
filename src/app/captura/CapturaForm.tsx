@@ -35,6 +35,8 @@ export function CapturaForm({ empleados, areas }: Props) {
   const [warn24h, setWarn24h] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewResult, setReviewResult] = useState<any>(null);
   const [requiereLoto, setRequiereLoto] = useState(false);
   const [geo, setGeo] = useState<{ lat: number; lon: number } | null>(null);
   const [geoStatus, setGeoStatus] = useState<string>("Obteniendo ubicacion...");
@@ -422,6 +424,124 @@ export function CapturaForm({ empleados, areas }: Props) {
             <textarea name="observacionesOperador" rows={2} className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
           </label>
         </section>
+
+        {/* ═══════════ AI COMPLIANCE REVIEW ═══════════ */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h4 className="text-sm font-bold text-gray-700">Revision de Cumplimiento con IA</h4>
+              <p className="text-[10px] text-gray-400">Valida el permiso contra RENOVABLES-O-PR-01 antes de enviar</p>
+            </div>
+            <button
+              type="button"
+              disabled={reviewLoading}
+              onClick={async () => {
+                const form = document.querySelector("form") as HTMLFormElement;
+                const fd = new FormData(form);
+                setReviewLoading(true);
+                setReviewResult(null);
+                try {
+                  const res = await fetch("/api/ai/cumplimiento", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      ordenTrabajo: fd.get("ordenTrabajo"),
+                      fechaTrabajo: fd.get("fechaTrabajo"),
+                      duracionDias: fd.get("duracionDias"),
+                      duracionHoras: fd.get("duracionHoras"),
+                      area: form.querySelector<HTMLSelectElement>("[name=areaId]")?.selectedOptions[0]?.text || "",
+                      actividad: fd.get("actividadEspecifica"),
+                      pasos: fd.get("descripcionPasos"),
+                      norma: fd.get("normaAplicable"),
+                      solicitante: fd.get("solicitanteEngie"),
+                      responsable: fd.get("responsableTrabajo"),
+                      departamento: fd.get("departamentoContratista"),
+                      valorRiesgo: fd.get("valorRiesgoMax"),
+                      condicionesClimaticas: fd.get("condicionesClimaticas"),
+                      riesgos: fd.get("riesgosIdentificados"),
+                      medidas: fd.get("medidasControl"),
+                      tiposEspeciales: selectedTipos.join(", ") || "ninguno",
+                      requiereLoto,
+                      noLoto: fd.get("noLoto"),
+                    }),
+                  });
+                  const data = await res.json();
+                  if (data.error) { alert(data.error); return; }
+                  setReviewResult(data);
+                } catch (e: any) {
+                  alert("Error: " + e.message);
+                } finally {
+                  setReviewLoading(false);
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white text-sm font-semibold rounded-xl hover:from-teal-700 hover:to-emerald-700 shadow-md transition-all disabled:opacity-50"
+            >
+              {reviewLoading ? (
+                <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Revisando...</>
+              ) : (
+                <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Revisar Cumplimiento</>
+              )}
+            </button>
+          </div>
+
+          {reviewResult && (
+            <div className="space-y-3">
+              {/* Score bar */}
+              <div className="flex items-center gap-4">
+                <div className={`text-3xl font-extrabold ${
+                  reviewResult.puntaje >= 80 ? "text-emerald-600" :
+                  reviewResult.puntaje >= 60 ? "text-yellow-600" : "text-red-600"
+                }`}>
+                  {reviewResult.puntaje}%
+                </div>
+                <div className="flex-1">
+                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all ${
+                      reviewResult.puntaje >= 80 ? "bg-emerald-500" :
+                      reviewResult.puntaje >= 60 ? "bg-yellow-500" : "bg-red-500"
+                    }`} style={{ width: `${reviewResult.puntaje}%` }} />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">{reviewResult.resumen}</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  reviewResult.aprobado ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                }`}>
+                  {reviewResult.aprobado ? "APROBADO" : "REQUIERE CORRECCION"}
+                </span>
+              </div>
+
+              {/* Critical issues */}
+              {reviewResult.criticos?.length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-xs font-bold text-red-700 mb-1">Problemas Criticos ({reviewResult.criticos.length})</p>
+                  {reviewResult.criticos.map((c: string, i: number) => (
+                    <p key={i} className="text-xs text-red-600 flex items-start gap-1"><span className="text-red-400 shrink-0">✗</span> {c}</p>
+                  ))}
+                </div>
+              )}
+
+              {/* Warnings */}
+              {reviewResult.advertencias?.length > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <p className="text-xs font-bold text-amber-700 mb-1">Advertencias ({reviewResult.advertencias.length})</p>
+                  {reviewResult.advertencias.map((a: string, i: number) => (
+                    <p key={i} className="text-xs text-amber-600 flex items-start gap-1"><span className="text-amber-400 shrink-0">!</span> {a}</p>
+                  ))}
+                </div>
+              )}
+
+              {/* Suggestions */}
+              {reviewResult.sugerencias?.length > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-xs font-bold text-blue-700 mb-1">Sugerencias de Mejora</p>
+                  {reviewResult.sugerencias.map((s: string, i: number) => (
+                    <p key={i} className="text-xs text-blue-600 flex items-start gap-1"><span className="text-blue-400 shrink-0">→</span> {s}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* ═══════════ SUBMIT ═══════════ */}
         <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 p-5">
