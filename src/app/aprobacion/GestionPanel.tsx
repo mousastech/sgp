@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import { usePersona } from "@/lib/PersonaContext";
+import { GestionRoleBanner } from "./RoleBanner";
 import {
   iniciarRevision,
   autorizarPermiso,
@@ -110,8 +112,18 @@ type SupervisorFull = Supervisor & {
 };
 
 export function GestionPanel({ supervisores, permisos }: { supervisores: SupervisorFull[]; permisos: Permiso[] }) {
+  const { persona } = usePersona();
   const [supId, setSupId] = useState(supervisores[0]?.id);
   const [activeTab, setActiveTab] = useState("ENVIADO");
+  const canAuthorize = persona?.puedeSerAutorizador || persona?.esJefePlanta || false;
+
+  // Auto-select persona as Autorizador if they have the role
+  useEffect(() => {
+    if (persona && canAuthorize) {
+      const match = supervisores.find((s) => s.id === persona.id);
+      if (match) setSupId(match.id);
+    }
+  }, [persona, canAuthorize, supervisores]);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -160,6 +172,8 @@ export function GestionPanel({ supervisores, permisos }: { supervisores: Supervi
         </div>
       </div>
 
+      <GestionRoleBanner />
+
       {feedback && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-blue-800 text-sm font-medium flex justify-between">
           {feedback}
@@ -167,27 +181,23 @@ export function GestionPanel({ supervisores, permisos }: { supervisores: Supervi
         </div>
       )}
 
-      {/* Autorizador selector */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <label className="block">
-          <span className="text-sm font-medium text-gray-700">Actuar como Autorizador <span className="text-gray-400 font-normal">(Anexo 1 — Homologacion de Puestos)</span></span>
-          <select value={supId} onChange={(e) => setSupId(Number(e.target.value))}
-            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border">
-            {supervisores.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.numeroEmpleado} — {s.nombreCompleto}
-                {s.esJefePlanta ? " [Jefe de Planta]" : s.puedeSerAutorizador ? " [Autorizador]" : ""}
-              </option>
-            ))}
-          </select>
-        </label>
-        {(() => {
-          const sel = supervisores.find((s) => s.id === supId);
-          if (sel?.esJefePlanta) return <p className="text-xs text-engie-blue mt-1 font-semibold">Jefe de Planta — puede autorizar permisos generales y trabajos especiales</p>;
-          if (sel?.puedeSerAutorizador) return <p className="text-xs text-green-600 mt-1">Autorizador — puede autorizar permisos generales</p>;
-          return <p className="text-xs text-amber-600 mt-1">Este usuario no tiene rol de Autorizador en la matriz de puestos</p>;
-        })()}
-      </div>
+      {/* Autorizador selector — only visible for authorized roles */}
+      {canAuthorize && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700">Firmar como Autorizador <span className="text-gray-400 font-normal">(Anexo 1)</span></span>
+            <select value={supId} onChange={(e) => setSupId(Number(e.target.value))}
+              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border">
+              {supervisores.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.numeroEmpleado} — {s.nombreCompleto}
+                  {s.esJefePlanta ? " [Jefe de Planta]" : s.puedeSerAutorizador ? " [Autorizador]" : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
 
       {/* Pipeline visualization */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
@@ -412,7 +422,7 @@ export function GestionPanel({ supervisores, permisos }: { supervisores: Supervi
                   {/* === ACTION FORMS by state === */}
 
                   {/* ENVIADO: Iniciar Revision */}
-                  {pt.estado === "ENVIADO" && (
+                  {pt.estado === "ENVIADO" && canAuthorize && (
                     <div className="border-t border-gray-100 pt-4">
                       <h4 className="text-sm font-bold text-engie-blue mb-3 flex items-center gap-2"><Search size={14} /> Revision de Alcance (6.4)</h4>
                       <p className="text-xs text-gray-500 mb-3">Evalua la actividad, area y alcance del trabajo. Verifica si existen interferencias con otros trabajos.</p>
@@ -429,15 +439,30 @@ export function GestionPanel({ supervisores, permisos }: { supervisores: Supervi
                       </button>
                     </div>
                   )}
+                  {pt.estado === "ENVIADO" && !canAuthorize && (
+                    <div className="border-t border-gray-100 pt-4 bg-gray-50 rounded-lg p-3">
+                      <p className="text-xs text-gray-500">Solo un Autorizador puede tomar este permiso para revision. Cambie de persona en el selector del sidebar.</p>
+                    </div>
+                  )}
 
                   {/* EN_REVISION: Autorizar / Devolver / Rechazar */}
-                  {pt.estado === "EN_REVISION" && (
+                  {pt.estado === "EN_REVISION" && canAuthorize && (
                     <ActionFormRevision pt={pt} isPending={isPending} runAction={runAction} />
+                  )}
+                  {pt.estado === "EN_REVISION" && !canAuthorize && (
+                    <div className="border-t border-gray-100 pt-4 bg-gray-50 rounded-lg p-3">
+                      <p className="text-xs text-gray-500">Este permiso esta en revision. Solo un Autorizador puede aprobar, devolver o rechazar.</p>
+                    </div>
                   )}
 
                   {/* AUTORIZADO: Registrar ERUM */}
-                  {pt.estado === "AUTORIZADO" && (
+                  {pt.estado === "AUTORIZADO" && canAuthorize && (
                     <ActionFormErum pt={pt} isPending={isPending} runAction={runAction} />
+                  )}
+                  {pt.estado === "AUTORIZADO" && !canAuthorize && (
+                    <div className="border-t border-gray-100 pt-4 bg-emerald-50 rounded-lg p-3">
+                      <p className="text-xs text-emerald-700">Permiso autorizado. La ERUM debe ser registrada por un Autorizador antes de iniciar el trabajo.</p>
+                    </div>
                   )}
 
                   {/* EN_EJECUCION: Extender / Suspender / Cerrar */}
