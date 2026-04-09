@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CategoriaEpp {
+  id          Int         @id @default(autoincrement())
+  nombre      String      @db.VarChar(100)
+  descripcion String?
+  activo      Boolean     @default(true)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  equipos     EquipoEpp[]
+
+  @@map("categorias_epp")
+}
+
+model EquipoEpp {
+  id          Int            @id @default(autoincrement())
+  categoriaId Int            @map("categoria_id")
+  nombre      String         @db.VarChar(150)
+  obligatorio Boolean        @default(false)
+  activo      Boolean        @default(true)
+  createdAt   DateTime       @default(now()) @map("created_at")
+  categoria   CategoriaEpp   @relation(fields: [categoriaId], references: [id])
+  checklist   ChecklistEpp[]
+
+  @@map("equipos_epp")
+}
+
+model Area {
+  id             Int              @id @default(autoincrement())
+  nombre         String           @db.VarChar(150)
+  ubicacion      String?          @db.VarChar(200)
+  coordenadasLat Decimal?         @map("coordenadas_lat") @db.Decimal(10, 8)
+  coordenadasLon Decimal?         @map("coordenadas_lon") @db.Decimal(11, 8)
+  activo         Boolean          @default(true)
+  createdAt      DateTime         @default(now()) @map("created_at")
+  empleados      Empleado[]
+  permisos       PermisoTrabajo[]
+
+  @@map("areas")
+}
+
+model Empleado {
+  id              Int              @id @default(autoincrement())
+  numeroEmpleado  String           @unique @map("numero_empleado") @db.VarChar(20)
+  nombreCompleto  String           @map("nombre_completo") @db.VarChar(200)
+  puesto          String?          @db.VarChar(100)
+  areaId          Int?             @map("area_id")
+  esSupervisor    Boolean          @default(false) @map("es_supervisor")
+  email           String?          @db.VarChar(150)
+  activo          Boolean          @default(true)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  area            Area?            @relation(fields: [areaId], references: [id])
+  permisos        PermisoTrabajo[]
+  aprobaciones    Aprobacion[]
+
+  @@map("empleados")
+}
+
+model PermisoTrabajo {
+  id                    Int            @id @default(autoincrement())
+  folio                 String         @unique @db.VarChar(30)
+  empleadoId            Int            @map("empleado_id")
+  areaId                Int            @map("area_id")
+  fechaTrabajo          DateTime       @map("fecha_trabajo") @db.Date
+  horaInicio            String?        @map("hora_inicio") @db.VarChar(10)
+  horaFin               String?        @map("hora_fin") @db.VarChar(10)
+  actividadEspecifica   String         @map("actividad_especifica")
+  descripcionPasos      String         @map("descripcion_pasos")
+  normaAplicable        String?        @map("norma_aplicable") @db.VarChar(100)
+  riesgosIdentificados  String?        @map("riesgos_identificados")
+  medidasControl        String?        @map("medidas_control")
+  estado                String         @default("BORRADOR") @db.VarChar(20)
+  coordenadasLatCaptura Decimal?       @map("coordenadas_lat_captura") @db.Decimal(10, 8)
+  coordenadasLonCaptura Decimal?       @map("coordenadas_lon_captura") @db.Decimal(11, 8)
+  observacionesOperador String?        @map("observaciones_operador")
+  // --- Apartado I. Solicitud (IN01 campos 2,7-9,12-14) ---
+  ordenTrabajo          String?        @map("orden_trabajo") @db.VarChar(50)
+  duracionDias          Int?           @map("duracion_dias")
+  duracionHoras         Decimal?       @map("duracion_horas") @db.Decimal(4, 1)
+  disponibilidadEmergencia Decimal?    @map("disponibilidad_emergencia") @db.Decimal(4, 1)
+  solicitanteEngie      String?        @map("solicitante_engie") @db.VarChar(200)
+  responsableTrabajo    String?        @map("responsable_trabajo") @db.VarChar(200)
+  departamentoContratista String?      @map("departamento_contratista") @db.VarChar(200)
+  // --- Apartado II. Analisis de Seguridad (IN01 campos 15-16) ---
+  valorRiesgoMax        Int?           @map("valor_riesgo_max")
+  condicionesClimaticas String?        @map("condiciones_climaticas")
+  // --- Apartado III. Condiciones Especiales (IN01 campo 17) ---
+  requiereLoto          Boolean        @default(false) @map("requiere_loto")
+  noLoto                String?        @map("no_loto") @db.VarChar(30)
+  tiposTrabajoEspecial  String?        @map("tipos_trabajo_especial")
+  motivoDevolucion      String?        @map("motivo_devolucion")
+  motivoRechazo         String?        @map("motivo_rechazo")
+  motivoSuspension      String?        @map("motivo_suspension")
+  erumCompletado        Boolean        @default(false) @map("erum_completado")
+  erumObservaciones     String?        @map("erum_observaciones")
+  fechaAutorizacion     DateTime?      @map("fecha_autorizacion")
+  fechaInicioEjecucion  DateTime?      @map("fecha_inicio_ejecucion")
+  fechaCierre           DateTime?      @map("fecha_cierre")
+  extensionDias         Int            @default(0) @map("extension_dias")
+  observacionesCierre   String?        @map("observaciones_cierre")
+  condicionesCierreOk   Boolean?       @map("condiciones_cierre_ok")
+  createdAt             DateTime       @default(now()) @map("created_at")
+  updatedAt             DateTime       @default(now()) @map("updated_at")
+  empleado              Empleado       @relation(fields: [empleadoId], references: [id])
+  area                  Area           @relation(fields: [areaId], references: [id])
+  checklist             ChecklistEpp[]
+  aprobaciones          Aprobacion[]
+  listasVerificacion    ListaVerificacion[]
+
+  @@map("permisos_trabajo")
+}
+
+model ChecklistEpp {
+  id          Int            @id @default(autoincrement())
+  permisoId   Int            @map("permiso_id")
+  equipoId    Int            @map("equipo_id")
+  cumple      Boolean        @default(false)
+  observacion String?
+  createdAt   DateTime       @default(now()) @map("created_at")
+  permiso     PermisoTrabajo @relation(fields: [permisoId], references: [id])
+  equipo      EquipoEpp      @relation(fields: [equipoId], references: [id])
+
+  @@map("checklist_epp")
+}
+
+model Aprobacion {
+  id                  Int            @id @default(autoincrement())
+  permisoId           Int            @map("permiso_id")
+  supervisorId        Int            @map("supervisor_id")
+  decision            String         @db.VarChar(20)
+  comentarios         String?
+  firmaElectronica    String         @map("firma_electronica") @db.VarChar(64)
+  coordenadasLatFirma Decimal?       @map("coordenadas_lat_firma") @db.Decimal(10, 8)
+  coordenadasLonFirma Decimal?       @map("coordenadas_lon_firma") @db.Decimal(11, 8)
+  fechaFirma          DateTime       @default(now()) @map("fecha_firma")
+  permiso             PermisoTrabajo @relation(fields: [permisoId], references: [id])
+  supervisor          Empleado       @relation(fields: [supervisorId], references: [id])
+
+  @@map("aprobaciones")
+}
+
+model ListaVerificacion {
+  id          Int            @id @default(autoincrement())
+  permisoId   Int            @map("permiso_id")
+  tipo        String         @db.VarChar(30)
+  codigo      String         @db.VarChar(30)
+  respuestas  Json           @default("{}")
+  estado      String         @default("PENDIENTE") @db.VarChar(20)
+  creadoPor   String?        @map("creado_por") @db.VarChar(200)
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @default(now()) @map("updated_at")
+  permiso     PermisoTrabajo @relation(fields: [permisoId], references: [id])
+
+  @@map("listas_verificacion")
+}
+
+model Auditoria {
+  id          Int      @id @default(autoincrement())
+  tabla       String   @db.VarChar(50)
+  registroId  Int      @map("registro_id")
+  accion      String   @db.VarChar(30)
+  usuario     String?  @db.VarChar(200)
+  datosNuevos Json?    @map("datos_nuevos")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("auditoria")
+}

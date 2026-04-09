@@ -1,0 +1,14 @@
+command:
+  - "npm"
+  - "start"
+env:
+  - name: "HOSTNAME"
+    value: "0.0.0.0"
+  - name: "LAKEBASE_HOST"
+    value: "ep-summer-hill-d20bmnev.database.us-east-1.cloud.databricks.com"
+  - name: "LAKEBASE_DB"
+    value: "engie_pt"
+  - name: "DATABRICKS_HOST"
+    value: "fevm-serverless-stable-cvpomp.cloud.databricks.com"
+  - name: "DATABASE_URL"
+    value: "postgresql://engie_app:EngieHSE2026perm!@ep-summer-hill-d20bmnev.database.us-east-1.cloud.databricks.com:5432/engie_pt?sslmode=require"

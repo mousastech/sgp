@@ -1,0 +1,5 @@
+databricks_account_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+client_id             = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+client_secret         = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+region                = "us-east-1"
+prefix                = "engie-pt"
