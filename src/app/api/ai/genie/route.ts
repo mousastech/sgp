@@ -61,9 +61,10 @@ export async function POST(req: NextRequest) {
 
     let parsed;
     try {
-      const start = content.indexOf("{");
-      const end = content.lastIndexOf("}") + 1;
-      parsed = JSON.parse(content.substring(start, end));
+      let cleaned = content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+      const start = cleaned.indexOf("{");
+      const end = cleaned.lastIndexOf("}") + 1;
+      parsed = JSON.parse(cleaned.substring(start, end));
     } catch {
       return NextResponse.json({ respuesta: content, sql: null, datos: null });
     }

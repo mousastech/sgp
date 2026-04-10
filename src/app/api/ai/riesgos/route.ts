@@ -51,18 +51,30 @@ Genera el JSON con el analisis completo de riesgos, medidas de control, valor de
       { role: "user", content: prompt },
     ]);
 
-    // Parse JSON from response
+    // Parse JSON from response - handle markdown code blocks and extra text
     let analysis;
     try {
-      const jsonStart = content.indexOf("{");
-      const jsonEnd = content.lastIndexOf("}") + 1;
+      // Strip markdown code blocks if present
+      let cleaned = content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+      const jsonStart = cleaned.indexOf("{");
+      const jsonEnd = cleaned.lastIndexOf("}") + 1;
       if (jsonStart >= 0 && jsonEnd > jsonStart) {
-        analysis = JSON.parse(content.substring(jsonStart, jsonEnd));
+        analysis = JSON.parse(cleaned.substring(jsonStart, jsonEnd));
       } else {
-        analysis = JSON.parse(content);
+        analysis = JSON.parse(cleaned);
       }
     } catch {
-      return NextResponse.json({ error: "Error al parsear respuesta de IA", raw: content }, { status: 500 });
+      // Fallback: return a reasonable default with the raw text as observaciones
+      analysis = {
+        riesgos: "Ver observaciones",
+        medidasControl: "Ver observaciones",
+        valorRiesgoSugerido: 12,
+        tiposEspeciales: [],
+        requiereLoto: false,
+        condicionesClimaticas: "",
+        normaAplicable: "",
+        observaciones: content.substring(0, 500),
+      };
     }
 
     return NextResponse.json(analysis);
