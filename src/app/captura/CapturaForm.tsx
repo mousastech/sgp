@@ -130,7 +130,7 @@ export function CapturaForm({ empleados, areas }: Props) {
             </label>
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Solicitado para fecha * <span className="text-gray-400 font-normal">(3)</span></span>
-              <input type="date" name="fechaTrabajo" defaultValue={today} required
+              <input type="date" name="fechaTrabajo" required
                 onChange={(e) => {
                   const selected = new Date(e.target.value + "T00:00:00");
                   const diff = selected.getTime() - Date.now();
@@ -140,7 +140,7 @@ export function CapturaForm({ empleados, areas }: Props) {
             </label>
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Hora solicitada <span className="text-gray-400 font-normal">(4)</span></span>
-              <input type="time" name="horaInicio" defaultValue="08:00" className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
+              <input type="time" name="horaInicio" className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
             </label>
           </div>
           {warn24h && (
@@ -168,7 +168,7 @@ export function CapturaForm({ empleados, areas }: Props) {
             </label>
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Hora fin</span>
-              <input type="time" name="horaFin" defaultValue="17:00" className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
+              <input type="time" name="horaFin" className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
             </label>
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Disp. emergencia (hrs) <span className="text-gray-400 font-normal">(9)</span></span>
