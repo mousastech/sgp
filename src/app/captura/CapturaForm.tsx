@@ -470,7 +470,7 @@ export function CapturaForm({ empleados, responsables, areas }: Props) {
                       actividad: fd.get("actividadEspecifica"),
                       pasos: fd.get("descripcionPasos"),
                       norma: fd.get("normaAplicable"),
-                      solicitante: fd.get("solicitanteEngie"),
+                      solicitante: form.querySelector<HTMLSelectElement>("[name=empleadoId]")?.selectedOptions[0]?.text || "",
                       responsable: fd.get("responsableTrabajo"),
                       departamento: fd.get("departamentoContratista"),
                       valorRiesgo: fd.get("valorRiesgoMax"),
