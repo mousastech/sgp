@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { guardarRonda } from "@/lib/actions/rondas";
-import { Save, CheckCircle, AlertTriangle, ArrowLeft, Activity } from "lucide-react";
+import { Save, CheckCircle, AlertTriangle, ArrowLeft, Activity, Zap } from "lucide-react";
 
 type Punto = { id: string; nombre: string; tipo: string; unidad?: string; min?: number; max?: number; opciones?: string[] };
 type Ronda = {
@@ -23,6 +23,8 @@ export function RondaForm({ ronda }: { ronda: Ronda }) {
     return initial;
   });
   const [saved, setSaved] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const readOnly = ronda.estado === "COMPLETADA";
 
   const puntos: Punto[] = Array.isArray(ronda.plantilla.puntos) ? ronda.plantilla.puntos : [];
@@ -61,7 +63,25 @@ export function RondaForm({ ronda }: { ronda: Ronda }) {
       const res = await guardarRonda(fd);
       if (res.success) {
         setSaved(true);
-        if (finalizar) setTimeout(() => router.push("/rondas"), 1500);
+        if (finalizar) {
+          // Auto-run AI analysis
+          setAiLoading(true);
+          try {
+            const aiRes = await fetch("/api/ai/ronda", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                lecturas,
+                plantilla: ronda.plantilla.nombre,
+                area: ronda.area.nombre,
+                tecnico: ronda.empleado.nombreCompleto,
+              }),
+            });
+            const aiData = await aiRes.json();
+            if (!aiData.error) setAiAnalysis(aiData);
+          } catch {}
+          setAiLoading(false);
+        }
       }
     });
   }
@@ -93,6 +113,68 @@ export function RondaForm({ ronda }: { ronda: Ronda }) {
 
       {readOnly && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-blue-800 text-sm">Ronda completada — solo lectura.</div>
+      )}
+
+      {/* AI Analysis */}
+      {aiLoading && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex items-center gap-3 animate-pulse">
+          <Zap size={20} className="text-indigo-500" />
+          <span className="text-sm text-indigo-700 font-medium">Analizando lecturas con IA...</span>
+        </div>
+      )}
+
+      {aiAnalysis && (
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap size={18} className="text-indigo-600" />
+              <span className="text-sm font-bold text-indigo-800">Analisis de IA — Ronda Completada</span>
+            </div>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+              aiAnalysis.estadoGeneral === "CRITICO" ? "bg-red-100 text-red-700" :
+              aiAnalysis.estadoGeneral === "ATENCION" ? "bg-amber-100 text-amber-700" :
+              "bg-green-100 text-green-700"
+            }`}>{aiAnalysis.estadoGeneral}</span>
+          </div>
+
+          <p className="text-sm text-indigo-900">{aiAnalysis.resumen}</p>
+
+          {aiAnalysis.anomaliasDetectadas?.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-xs font-bold text-red-700 mb-1">Anomalias Detectadas</p>
+              {aiAnalysis.anomaliasDetectadas.map((a: string, i: number) => (
+                <p key={i} className="text-xs text-red-600 flex items-start gap-1"><span className="shrink-0">!</span> {a}</p>
+              ))}
+            </div>
+          )}
+
+          {aiAnalysis.tendencias?.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-xs font-bold text-amber-700 mb-1">Tendencias a Monitorear</p>
+              {aiAnalysis.tendencias.map((t: string, i: number) => (
+                <p key={i} className="text-xs text-amber-600 flex items-start gap-1"><span className="shrink-0">~</span> {t}</p>
+              ))}
+            </div>
+          )}
+
+          {aiAnalysis.accionesRecomendadas?.length > 0 && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs font-bold text-blue-700 mb-1">Acciones Recomendadas</p>
+              {aiAnalysis.accionesRecomendadas.map((a: string, i: number) => (
+                <p key={i} className="text-xs text-blue-600 flex items-start gap-1"><span className="shrink-0">→</span> {a}</p>
+              ))}
+            </div>
+          )}
+
+          {aiAnalysis.proximoFoco && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+              <p className="text-xs font-bold text-purple-700">Foco para Proxima Ronda</p>
+              <p className="text-xs text-purple-600">{aiAnalysis.proximoFoco}</p>
+            </div>
+          )}
+
+          <p className="text-[10px] text-indigo-400">Powered by Claude Sonnet 4.6 via Databricks FMAPI</p>
+        </div>
       )}
 
       {anomaliaCount > 0 && !readOnly && (
