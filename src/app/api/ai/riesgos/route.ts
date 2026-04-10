@@ -3,32 +3,28 @@ import { callFMAPI } from "@/lib/fmapi";
 
 export const dynamic = "force-dynamic";
 
-const SYSTEM_PROMPT = `Eres un experto en seguridad industrial y salud ocupacional para centrales electricas con tecnologias renovables (eolica y solar) de ENGIE Mexico. Tu rol es analizar descripciones de trabajos y generar un analisis de riesgos completo.
+const SYSTEM_PROMPT = `Eres un experto en seguridad industrial para centrales electricas renovables de ENGIE Mexico (eolica y solar). Analiza trabajos y genera analisis de riesgos.
 
-Contexto: Centrales electricas renovables en Mexico (eolica: aerogeneradores 80-120m, solar: paneles, inversores, subestaciones). El procedimiento base es RENOVABLES-O-PR-01 Ed.2.
+Tipos de trabajo especial validos: ALTURAS, ESPACIOS_CONFINADOS, EXCAVACION, CALIENTE, EQUIPO_ENERGIZADO, IZAJE_CARGAS, MAQUINARIA_PESADA, ICS
 
-Normas mexicanas aplicables:
-- NOM-009-STPS-2011: Trabajos en Altura
-- NOM-029-STPS-2011: Instalaciones Electricas
-- NOM-005-STPS-2017: Sustancias Quimicas
-- NOM-031-STPS-2011: Construccion
-- NOM-033-STPS-2015: Espacios Confinados
+Responde usando EXACTAMENTE este formato de lineas (una por linea, sin cambiar los prefijos):
 
-Tipos de trabajo especial: ALTURAS (>1.80m), ESPACIOS_CONFINADOS, EXCAVACION, CALIENTE, EQUIPO_ENERGIZADO, IZAJE_CARGAS, MAQUINARIA_PESADA, ICS
+RIESGOS: lista de riesgos separados por coma
+MEDIDAS: lista de medidas de control separadas por coma
+VALOR_RIESGO: numero del 1 al 25
+TIPOS_ESPECIALES: lista de codigos separados por coma (ej: ALTURAS, EQUIPO_ENERGIZADO)
+REQUIERE_LOTO: SI o NO
+CONDICIONES_CLIMA: condiciones climaticas a considerar
+NORMA: norma NOM mas relevante
+OBSERVACIONES: recomendaciones adicionales
 
-Responde SIEMPRE en formato JSON valido con esta estructura:
-{
-  "riesgos": "lista de riesgos identificados separados por coma",
-  "medidasControl": "lista de medidas de control separadas por coma",
-  "valorRiesgoSugerido": numero del 1 al 25 (matriz 5x5 probabilidad x severidad),
-  "tiposEspeciales": ["array de tipos detectados como ALTURAS, EQUIPO_ENERGIZADO, etc"],
-  "requiereLoto": true/false,
-  "condicionesClimaticas": "condiciones climaticas a considerar",
-  "normaAplicable": "norma NOM mas relevante",
-  "observaciones": "recomendaciones adicionales de seguridad"
+No agregues nada mas. Solo las 8 lineas con el formato indicado.`;
+
+function parseLine(content: string, prefix: string): string {
+  const regex = new RegExp(`^${prefix}:\\s*(.+)$`, "mi");
+  const match = content.match(regex);
+  return match ? match[1].trim() : "";
 }
-
-IMPORTANTE: Responde SOLO con el JSON puro. NO uses bloques de codigo markdown. NO agregues texto antes o despues del JSON. Solo el objeto JSON.`;
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,63 +35,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "La descripcion de la actividad es requerida" }, { status: 400 });
     }
 
-    const prompt = `Analiza el siguiente trabajo y genera el analisis de riesgos:
+    const prompt = `Analiza este trabajo y genera el analisis de riesgos:
 
 ACTIVIDAD: ${actividad}
-${pasos ? `PASO A PASO: ${pasos}` : ""}
-${area ? `AREA/UBICACION: ${area}` : ""}
-${norma ? `NORMA INDICADA: ${norma}` : ""}
-
-Genera el JSON con el analisis completo de riesgos, medidas de control, valor de riesgo sugerido, tipos de trabajo especial detectados, si requiere LOTO, y condiciones climaticas a considerar.`;
+${pasos ? `PASOS: ${pasos}` : ""}
+${area ? `AREA: ${area}` : ""}
+${norma ? `NORMA: ${norma}` : ""}`;
 
     const content = await callFMAPI([
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: prompt },
     ]);
 
-    // Parse JSON from response - handle markdown code blocks and extra text
-    let analysis;
-    try {
-      // Aggressively strip all markdown artifacts
-      let cleaned = content
-        .replace(/```json/gi, "")
-        .replace(/```/g, "")
-        .replace(/^\s*json\s*/i, "")
-        .trim();
-      // Extract JSON object
-      const jsonStart = cleaned.indexOf("{");
-      const jsonEnd = cleaned.lastIndexOf("}") + 1;
-      if (jsonStart >= 0 && jsonEnd > jsonStart) {
-        const jsonStr = cleaned.substring(jsonStart, jsonEnd);
-        analysis = JSON.parse(jsonStr);
-      } else {
-        analysis = JSON.parse(cleaned);
-      }
-    } catch (parseErr) {
-      console.error("[AI Riesgos] Parse error. Raw content:", content.substring(0, 200));
-      // Second attempt: try to extract with more aggressive regex
-      try {
-        const match = content.match(/\{[\s\S]*\}/);
-        if (match) {
-          analysis = JSON.parse(match[0]);
-        } else {
-          throw new Error("No JSON found");
-        }
-      } catch {
-        analysis = {
-          riesgos: "Ver observaciones - la IA genero una respuesta que no pudo ser procesada automaticamente",
-          medidasControl: "Revisar manualmente",
-          valorRiesgoSugerido: 12,
-          tiposEspeciales: [],
-          requiereLoto: false,
-          condicionesClimaticas: "",
-          normaAplicable: "",
-          observaciones: content.replace(/```json/gi, "").replace(/```/g, "").substring(0, 500),
-        };
-      }
-    }
+    // Parse line-based response
+    const riesgos = parseLine(content, "RIESGOS");
+    const medidasControl = parseLine(content, "MEDIDAS");
+    const valorStr = parseLine(content, "VALOR_RIESGO");
+    const tiposStr = parseLine(content, "TIPOS_ESPECIALES");
+    const lotoStr = parseLine(content, "REQUIERE_LOTO");
+    const condicionesClimaticas = parseLine(content, "CONDICIONES_CLIMA");
+    const normaAplicable = parseLine(content, "NORMA");
+    const observaciones = parseLine(content, "OBSERVACIONES");
 
-    return NextResponse.json(analysis);
+    const valorRiesgoSugerido = parseInt(valorStr) || 12;
+    const tiposEspeciales = tiposStr
+      ? tiposStr.split(",").map((t) => t.trim().toUpperCase().replace(/\s+/g, "_")).filter(Boolean)
+      : [];
+    const requiereLoto = lotoStr.toUpperCase().includes("SI");
+
+    return NextResponse.json({
+      riesgos: riesgos || "Consultar analisis de riesgos",
+      medidasControl: medidasControl || "Consultar medidas de control",
+      valorRiesgoSugerido,
+      tiposEspeciales,
+      requiereLoto,
+      condicionesClimaticas,
+      normaAplicable,
+      observaciones,
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Error interno" }, { status: 500 });
   }
