@@ -1,12 +1,13 @@
 export const dynamic = "force-dynamic";
 
-import { getEmpleadosOperadores, getAreas } from "@/lib/actions/permisos";
+import { getEmpleadosOperadores, getAreas, getEmpleadosResponsables } from "@/lib/actions/permisos";
 import { CapturaForm } from "./CapturaForm";
 import { CapturaRoleGate } from "./RoleGate";
 
 export default async function CapturaPage() {
-  const [empleados, areas] = await Promise.all([
+  const [empleados, responsables, areas] = await Promise.all([
     getEmpleadosOperadores(),
+    getEmpleadosResponsables(),
     getAreas(),
   ]);
 
@@ -20,7 +21,7 @@ export default async function CapturaPage() {
 
   return (
     <CapturaRoleGate>
-      <CapturaForm empleados={empleados} areas={areas} />
+      <CapturaForm empleados={empleados} responsables={responsables} areas={areas} />
     </CapturaRoleGate>
   );
 }

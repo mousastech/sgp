@@ -5,6 +5,7 @@ import { crearPermiso } from "@/lib/actions/permisos";
 
 type Props = {
   empleados: { id: number; numeroEmpleado: string; nombreCompleto: string }[];
+  responsables: { id: number; numeroEmpleado: string; nombreCompleto: string; puesto: string | null }[];
   areas: { id: number; nombre: string; ubicacion: string | null }[];
 };
 
@@ -28,7 +29,7 @@ const TIPOS_ESPECIAL = [
   { key: "MAQUINARIA_PESADA", label: "Manejo de Maquinaria Pesada" },
 ];
 
-export function CapturaForm({ empleados, areas }: Props) {
+export function CapturaForm({ empleados, responsables, areas }: Props) {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<{ success?: boolean; folio?: string; estado?: string; errors?: string[]; warning?: string } | null>(null);
   const [tiposEspecial, setTiposEspecial] = useState<Record<string, boolean>>({});
@@ -219,16 +220,17 @@ export function CapturaForm({ empleados, areas }: Props) {
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">Responsable del Trabajo <span className="text-gray-400 font-normal">(13)</span></span>
-              <input type="text" name="responsableTrabajo" placeholder="Nombre completo de quien ejecuta en sitio" className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
+              <span className="text-sm font-medium text-gray-700">Responsable del Trabajo * <span className="text-gray-400 font-normal">(13)</span></span>
+              <select name="responsableTrabajo" required className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border">
+                <option value="">Seleccionar responsable...</option>
+                {responsables.map((e) => (
+                  <option key={e.id} value={e.nombreCompleto}>{e.numeroEmpleado} — {e.nombreCompleto} {e.puesto ? `(${e.puesto})` : ""}</option>
+                ))}
+              </select>
             </label>
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Depto. ENGIE o Contratista <span className="text-gray-400 font-normal">(14)</span></span>
               <input type="text" name="departamentoContratista" placeholder="Nombre del departamento o contratista" className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700">Nombre del Solicitante ENGIE <span className="text-gray-400 font-normal">(12)</span></span>
-              <input type="text" name="solicitanteEngie" placeholder="Nombre y firma del solicitante" className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border" />
             </label>
           </div>
         </section>

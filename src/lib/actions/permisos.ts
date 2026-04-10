@@ -12,6 +12,15 @@ export async function getEmpleadosOperadores() {
   });
 }
 
+export async function getEmpleadosResponsables() {
+  // All employees who can be Responsable del Trabajo (Anexo 1: all including contratistas)
+  return (await getPrisma()).empleado.findMany({
+    where: { activo: true, puedeSerResponsable: true },
+    orderBy: { nombreCompleto: "asc" },
+    select: { id: true, numeroEmpleado: true, nombreCompleto: true, puesto: true },
+  });
+}
+
 export async function getAreas() {
   return (await getPrisma()).area.findMany({
     where: { activo: true },
