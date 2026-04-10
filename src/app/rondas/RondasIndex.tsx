@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { usePersona } from "@/lib/PersonaContext";
 import { crearRonda, crearPlantilla } from "@/lib/actions/rondas";
-import { Activity, Plus, Clock, AlertTriangle, CheckCircle, Play } from "lucide-react";
+import { Activity, Plus, Clock, AlertTriangle, CheckCircle, Play, TrendingUp } from "lucide-react";
+import Link from "next/link";
 
 type Plantilla = { id: number; nombre: string; descripcion: string | null; puntos: any; area: { nombre: string } | null };
 type Ronda = { id: number; fecha: Date; horaInicio: string | null; horaFin: string | null; estado: string; anomalias: number; empleado: { nombreCompleto: string }; area: { nombre: string }; plantilla: { nombre: string } };
@@ -68,6 +69,10 @@ export function RondasIndex({ plantillas, rondas, stats, areas }: { plantillas: 
               className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur text-white text-sm font-semibold rounded-xl hover:bg-white/30 transition">
               <Play size={16} /> Iniciar Ronda
             </button>
+            <Link href="/rondas/tendencias"
+              className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur text-white text-sm font-semibold rounded-xl hover:bg-white/30 transition">
+              <TrendingUp size={16} /> Tendencias
+            </Link>
             <button onClick={() => setShowNewPlantilla(!showNewPlantilla)}
               className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur text-white/80 text-sm rounded-xl hover:bg-white/20 transition">
               <Plus size={16} /> Plantilla
