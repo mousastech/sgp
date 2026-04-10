@@ -4,6 +4,8 @@ import { useState, createContext, useContext } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { PersonaSwitcher } from "./PersonaSwitcher";
+import { LangToggle } from "./LangToggle";
+import { useI18n } from "@/lib/i18n";
 import {
   Home,
   ClipboardList,
@@ -26,39 +28,39 @@ import {
 
 const NAV_SECTIONS = [
   {
-    title: "INICIO",
+    titleKey: "nav.inicio_section",
     items: [
-      { href: "/", label: "Inicio", icon: Home },
+      { href: "/", labelKey: "nav.inicio", icon: Home },
     ],
   },
   {
-    title: "OPERACIONES",
+    titleKey: "nav.operaciones",
     items: [
-      { href: "/captura", label: "Permiso General", icon: ClipboardList },
-      { href: "/verificacion", label: "Listas de Verificacion", icon: ClipboardCheck },
-      { href: "/aprobacion", label: "Gestion de Permisos", icon: CheckCircle },
-      { href: "/rondas", label: "Rondas Operativas", icon: Activity },
+      { href: "/captura", labelKey: "nav.permiso_general", icon: ClipboardList },
+      { href: "/verificacion", labelKey: "nav.listas_verificacion", icon: ClipboardCheck },
+      { href: "/aprobacion", labelKey: "nav.gestion_permisos", icon: CheckCircle },
+      { href: "/rondas", labelKey: "nav.rondas", icon: Activity },
     ],
   },
   {
-    title: "CUMPLIMIENTO",
+    titleKey: "nav.cumplimiento",
     items: [
-      { href: "/dashboard", label: "Dashboard HSE", icon: BarChart3 },
-      { href: "/bitacora", label: "Bitacora de Permisos", icon: BookOpen },
-      { href: "/calendario", label: "Calendario", icon: Calendar },
+      { href: "/dashboard", labelKey: "nav.dashboard", icon: BarChart3 },
+      { href: "/bitacora", labelKey: "nav.bitacora", icon: BookOpen },
+      { href: "/calendario", labelKey: "nav.calendario", icon: Calendar },
     ],
   },
   {
-    title: "IA",
+    titleKey: "nav.ia",
     items: [
-      { href: "/genie", label: "Genie de Seguridad", icon: MessageSquare },
-      { href: "/analitica", label: "Analitica de Riesgo", icon: TrendingUp },
+      { href: "/genie", labelKey: "nav.genie", icon: MessageSquare },
+      { href: "/analitica", labelKey: "nav.analitica", icon: TrendingUp },
     ],
   },
   {
-    title: "REFERENCIA",
+    titleKey: "nav.referencia",
     items: [
-      { href: "/admin", label: "Administracion", icon: Settings },
+      { href: "/admin", labelKey: "nav.admin", icon: Settings },
     ],
   },
 ];
@@ -70,6 +72,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const { t } = useI18n();
 
   return (
     <SidebarContext.Provider value={{ collapsed }}>
@@ -111,9 +114,9 @@ export function Sidebar() {
                 </div>
                 <div>
                   <h1 className="text-sm font-bold text-gray-900 leading-tight">
-                    Permisos de Trabajo
+                    {t("sidebar.title")}
                   </h1>
-                  <p className="text-[11px] text-gray-400 font-medium">ENGIE Mexico</p>
+                  <p className="text-[11px] text-gray-400 font-medium">{t("sidebar.subtitle")}</p>
                 </div>
               </div>
               <button onClick={() => setOpen(false)} className="lg:hidden text-gray-400 hover:text-gray-600">
@@ -126,22 +129,23 @@ export function Sidebar() {
         {/* Navigation */}
         <nav className="flex-1 py-4 px-2 overflow-y-auto">
           {NAV_SECTIONS.map((section) => (
-            <div key={section.title} className="mb-4">
+            <div key={section.titleKey} className="mb-4">
               {!collapsed && (
                 <p className="px-3 mb-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                  {section.title}
+                  {t(section.titleKey)}
                 </p>
               )}
               <div className="space-y-0.5">
                 {section.items.map((item) => {
                   const isActive = pathname === item.href;
                   const Icon = item.icon;
+                  const label = t(item.labelKey);
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       onClick={() => setOpen(false)}
-                      title={collapsed ? item.label : undefined}
+                      title={collapsed ? label : undefined}
                       className={`flex items-center ${collapsed ? "justify-center" : ""} gap-3 ${collapsed ? "px-2" : "px-3"} py-2.5 rounded-xl text-sm font-medium transition-all ${
                         isActive
                           ? "bg-engie-blue text-white shadow-md shadow-engie-blue/25"
@@ -149,7 +153,7 @@ export function Sidebar() {
                       }`}
                     >
                       <Icon className={`w-[18px] h-[18px] shrink-0 ${isActive ? "text-white" : "text-gray-400"}`} />
-                      {!collapsed && <span className="truncate">{item.label}</span>}
+                      {!collapsed && <span className="truncate">{label}</span>}
                     </Link>
                   );
                 })}
@@ -158,11 +162,16 @@ export function Sidebar() {
           ))}
         </nav>
 
+        {/* Language toggle */}
+        <div className="border-t border-gray-100 py-2">
+          <LangToggle collapsed={collapsed} />
+        </div>
+
         {/* Collapse toggle (desktop only) */}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="hidden lg:flex items-center justify-center py-3 border-t border-gray-100 text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
-          title={collapsed ? "Expandir menu" : "Colapsar menu"}
+          title={collapsed ? t("sidebar.expandir") : t("sidebar.colapsar")}
         >
           {collapsed ? <ChevronsRight size={18} /> : <ChevronsLeft size={18} />}
         </button>
