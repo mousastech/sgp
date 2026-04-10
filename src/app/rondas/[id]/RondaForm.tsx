@@ -201,48 +201,57 @@ export function RondaForm({ ronda }: { ronda: Ronda }) {
                 {punto.min !== undefined && <span className="text-[10px] text-gray-400">Rango: {punto.min} — {punto.max} {punto.unidad}</span>}
               </div>
 
-              <div className="flex gap-3">
-                {punto.tipo === "number" && (
-                  <input type="number" step="any" value={val.valor ?? ""} disabled={readOnly}
-                    onChange={(e) => setValue(punto.id, "valor", e.target.value)}
-                    placeholder={`Ej: ${((punto.min || 0) + (punto.max || 0)) / 2}`}
-                    className={`flex-1 rounded-lg border text-sm p-2 ${isAnomalia ? "border-red-300 bg-red-50" : "border-gray-300"}`} />
-                )}
+              <div className="space-y-2">
+                <div>
+                  {punto.tipo === "number" && (
+                    <input type="number" step="any" value={val.valor ?? ""} disabled={readOnly}
+                      onChange={(e) => setValue(punto.id, "valor", e.target.value)}
+                      placeholder={`Ingrese valor (${punto.unidad || ""})`}
+                      className={`w-full rounded-lg border text-sm p-2.5 ${isAnomalia ? "border-red-300 bg-red-50" : "border-gray-300"}`} />
+                  )}
 
-                {punto.tipo === "check_si_no" && (
-                  <div className="flex gap-4">
-                    {["si", "no"].map((opt) => (
-                      <label key={opt} className="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name={punto.id} value={opt} checked={val.valor === opt} disabled={readOnly}
-                          onChange={() => setValue(punto.id, "valor", opt)}
-                          className="w-4 h-4 text-engie-blue" />
-                        <span className="text-sm text-gray-700 uppercase">{opt === "si" ? "Si" : "No"}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
+                  {punto.tipo === "check_si_no" && (
+                    <div className="flex gap-4 py-1">
+                      {["no", "si"].map((opt) => (
+                        <label key={opt} className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition ${
+                          val.valor === opt
+                            ? opt === "si" && (punto.id === "ruido" || punto.id === "fuga") ? "bg-red-50 border-red-300 text-red-700" : "bg-engie-blue/10 border-engie-blue/30 text-engie-blue"
+                            : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                        }`}>
+                          <input type="radio" name={punto.id} value={opt} checked={val.valor === opt} disabled={readOnly}
+                            onChange={() => setValue(punto.id, "valor", opt)} className="sr-only" />
+                          <span className="text-sm font-semibold">{opt === "si" ? "Si" : "No"}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
 
-                {punto.tipo === "select" && (
-                  <select value={val.valor ?? ""} disabled={readOnly}
-                    onChange={(e) => setValue(punto.id, "valor", e.target.value)}
-                    className="flex-1 rounded-lg border-gray-300 text-sm p-2 border">
-                    <option value="">Seleccionar...</option>
-                    {punto.opciones?.map((o) => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                )}
+                  {punto.tipo === "select" && (
+                    <select value={val.valor ?? ""} disabled={readOnly}
+                      onChange={(e) => setValue(punto.id, "valor", e.target.value)}
+                      className="w-full rounded-lg border-gray-300 text-sm p-2.5 border">
+                      <option value="">Seleccionar...</option>
+                      {punto.opciones?.map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  )}
 
-                {punto.tipo === "text" && (
-                  <textarea value={val.valor ?? ""} disabled={readOnly}
-                    onChange={(e) => setValue(punto.id, "valor", e.target.value)}
-                    placeholder="Observaciones..."
-                    className="flex-1 rounded-lg border-gray-300 text-sm p-2 border" rows={2} />
-                )}
+                  {punto.tipo === "text" && (
+                    <textarea value={val.valor ?? ""} disabled={readOnly}
+                      onChange={(e) => setValue(punto.id, "valor", e.target.value)}
+                      placeholder="Escriba sus observaciones..."
+                      className="w-full rounded-lg border-gray-300 text-sm p-2.5 border" rows={2} />
+                  )}
+                </div>
 
-                {punto.tipo !== "text" && (
+                {punto.tipo !== "text" && val.showNote ? (
                   <input type="text" value={val.observacion ?? ""} disabled={readOnly}
                     onChange={(e) => setValue(punto.id, "observacion", e.target.value)}
-                    placeholder="Nota..." className="w-40 rounded-lg border-gray-300 text-sm p-2 border" />
-                )}
+                    placeholder="Escriba la nota..."
+                    className="w-full rounded-lg border-gray-200 text-xs p-2 border bg-gray-50" autoFocus />
+                ) : punto.tipo !== "text" && !readOnly ? (
+                  <button type="button" onClick={() => setValue(punto.id, "showNote", true)}
+                    className="text-[10px] text-gray-400 hover:text-engie-blue">+ Agregar nota</button>
+                ) : null}
               </div>
             </div>
           );
