@@ -32,7 +32,9 @@ Responde en JSON con esta estructura:
   "advertencias": ["lista de advertencias que no bloquean pero deben revisarse"],
   "sugerencias": ["lista de mejoras recomendadas"],
   "resumen": "resumen ejecutivo de 1-2 oraciones"
-}`;
+}
+
+IMPORTANTE: Responde SOLO con el JSON puro. NO uses bloques de codigo markdown. NO agregues texto antes o despues del JSON.`;
 
 export async function POST(req: NextRequest) {
   try {

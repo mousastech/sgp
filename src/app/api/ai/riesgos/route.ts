@@ -26,7 +26,9 @@ Responde SIEMPRE en formato JSON valido con esta estructura:
   "condicionesClimaticas": "condiciones climaticas a considerar",
   "normaAplicable": "norma NOM mas relevante",
   "observaciones": "recomendaciones adicionales de seguridad"
-}`;
+}
+
+IMPORTANTE: Responde SOLO con el JSON puro. NO uses bloques de codigo markdown. NO agregues texto antes o despues del JSON. Solo el objeto JSON.`;
 
 export async function POST(req: NextRequest) {
   try {
@@ -54,27 +56,43 @@ Genera el JSON con el analisis completo de riesgos, medidas de control, valor de
     // Parse JSON from response - handle markdown code blocks and extra text
     let analysis;
     try {
-      // Strip markdown code blocks if present
-      let cleaned = content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+      // Aggressively strip all markdown artifacts
+      let cleaned = content
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .replace(/^\s*json\s*/i, "")
+        .trim();
+      // Extract JSON object
       const jsonStart = cleaned.indexOf("{");
       const jsonEnd = cleaned.lastIndexOf("}") + 1;
       if (jsonStart >= 0 && jsonEnd > jsonStart) {
-        analysis = JSON.parse(cleaned.substring(jsonStart, jsonEnd));
+        const jsonStr = cleaned.substring(jsonStart, jsonEnd);
+        analysis = JSON.parse(jsonStr);
       } else {
         analysis = JSON.parse(cleaned);
       }
-    } catch {
-      // Fallback: return a reasonable default with the raw text as observaciones
-      analysis = {
-        riesgos: "Ver observaciones",
-        medidasControl: "Ver observaciones",
-        valorRiesgoSugerido: 12,
-        tiposEspeciales: [],
-        requiereLoto: false,
-        condicionesClimaticas: "",
-        normaAplicable: "",
-        observaciones: content.substring(0, 500),
-      };
+    } catch (parseErr) {
+      console.error("[AI Riesgos] Parse error. Raw content:", content.substring(0, 200));
+      // Second attempt: try to extract with more aggressive regex
+      try {
+        const match = content.match(/\{[\s\S]*\}/);
+        if (match) {
+          analysis = JSON.parse(match[0]);
+        } else {
+          throw new Error("No JSON found");
+        }
+      } catch {
+        analysis = {
+          riesgos: "Ver observaciones - la IA genero una respuesta que no pudo ser procesada automaticamente",
+          medidasControl: "Revisar manualmente",
+          valorRiesgoSugerido: 12,
+          tiposEspeciales: [],
+          requiereLoto: false,
+          condicionesClimaticas: "",
+          normaAplicable: "",
+          observaciones: content.replace(/```json/gi, "").replace(/```/g, "").substring(0, 500),
+        };
+      }
     }
 
     return NextResponse.json(analysis);

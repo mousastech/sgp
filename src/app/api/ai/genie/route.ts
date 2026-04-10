@@ -44,6 +44,7 @@ REGLAS:
 - Usa siempre nombres de columna con snake_case (como estan en la DB)
 - Usa LIMIT para evitar resultados excesivos
 - Responde siempre en espanol
+- IMPORTANTE: Responde SOLO con JSON puro. NO uses bloques de codigo markdown. NO agregues texto fuera del JSON.
 - Se conciso y directo`;
 
 export async function POST(req: NextRequest) {
