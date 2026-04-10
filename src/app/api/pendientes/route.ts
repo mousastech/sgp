@@ -22,9 +22,9 @@ export async function GET(req: NextRequest) {
   for (const p of devueltos) {
     pendientes.push({
       tipo: "DEVUELTO",
-      titulo: `Permiso ${p.folio} devuelto para correccion`,
-      detalle: p.motivoDevolucion || "Requiere correcciones del Autorizador",
-      href: "/aprobacion",
+      titulo: `Corregir permiso devuelto: ${p.folio}`,
+      detalle: `El Autorizador devolvio tu permiso. Motivo: "${p.motivoDevolucion || "Requiere correcciones"}". Corrige y reenvia.`,
+      href: "/captura",
       color: "yellow",
     });
   }
@@ -50,19 +50,22 @@ export async function GET(req: NextRequest) {
       if (!lista) {
         pendientes.push({
           tipo: "LISTA_PENDIENTE",
-          titulo: `Lista de Verificacion pendiente: ${tipo.replace(/_/g, " ")}`,
-          detalle: `Permiso ${p.folio} — Crear lista de verificacion antes de autorizar`,
-          href: "/verificacion",
+          titulo: `Crear Lista de Verificacion: ${tipo.replace(/_/g, " ")}`,
+          detalle: `Permiso ${p.folio} — Tu permiso fue aprobado. Debes crear y completar la lista de verificacion para ${tipo.replace(/_/g, " ")} antes de que el Autorizador pueda registrar la ERUM e iniciar el trabajo.`,
+          href: `/verificacion`,
           color: "purple",
-        });
+          folio: p.folio,
+          permisoId: p.id,
+        } as any);
       } else if (lista.estado === "PENDIENTE") {
         pendientes.push({
           tipo: "LISTA_INCOMPLETA",
-          titulo: `Lista de Verificacion incompleta: ${tipo.replace(/_/g, " ")}`,
-          detalle: `Permiso ${p.folio} — Completar y guardar la lista`,
-          href: "/verificacion",
+          titulo: `Completar Lista: ${tipo.replace(/_/g, " ")}`,
+          detalle: `Permiso ${p.folio} — Ya creaste la lista pero esta incompleta. Abrela, llena todos los campos y guarda.`,
+          href: `/verificacion`,
           color: "indigo",
-        });
+          folio: p.folio,
+        } as any);
       }
     }
   }
@@ -82,8 +85,8 @@ export async function GET(req: NextRequest) {
   for (const p of enEjecucion) {
     pendientes.push({
       tipo: "EN_EJECUCION",
-      titulo: `Trabajo en ejecucion: ${p.folio}`,
-      detalle: "Subir evidencia fotografica y firmar cierre cuando termine",
+      titulo: `Trabajo activo: ${p.folio}`,
+      detalle: "Tu trabajo esta en ejecucion. Sube evidencia fotografica durante el trabajo. Cuando termines, firma el cierre en Gestion de Permisos.",
       href: "/aprobacion",
       color: "orange",
     });

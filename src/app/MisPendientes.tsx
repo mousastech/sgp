@@ -70,7 +70,7 @@ export function MisPendientes() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className={`text-sm font-semibold ${c.text}`}>{p.titulo}</p>
-                <p className="text-xs text-gray-500 truncate">{p.detalle}</p>
+                <p className="text-xs text-gray-500 leading-relaxed">{p.detalle}</p>
               </div>
               <ArrowRight size={14} className="text-gray-300 group-hover:text-gray-500 transition shrink-0" />
             </Link>
