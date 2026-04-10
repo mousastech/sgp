@@ -272,13 +272,28 @@ export function CapturaForm({ empleados, areas }: Props) {
                 if (data.medidasControl) setVal("medidasControl", data.medidasControl);
                 if (data.valorRiesgoSugerido) setVal("valorRiesgoMax", String(data.valorRiesgoSugerido));
                 if (data.condicionesClimaticas) setVal("condicionesClimaticas", data.condicionesClimaticas);
-                // Auto-check special work types
-                if (data.tiposEspeciales?.length > 0) {
-                  const newTipos = { ...tiposEspecial };
-                  data.tiposEspeciales.forEach((t: string) => { newTipos[t] = true; });
-                  setTiposEspecial(newTipos);
+                // Auto-check special work types - map AI labels to keys
+                const tipoMap: Record<string, string> = {
+                  "ALTURAS": "ALTURAS", "ALTURA": "ALTURAS", "TRABAJO EN ALTURAS": "ALTURAS", "TRABAJO EN ALTURA": "ALTURAS",
+                  "ESPACIOS_CONFINADOS": "ESPACIOS_CONFINADOS", "ESPACIOS CONFINADOS": "ESPACIOS_CONFINADOS", "ESPACIO CONFINADO": "ESPACIOS_CONFINADOS",
+                  "EXCAVACION": "EXCAVACION", "EXCAVACIÓN": "EXCAVACION",
+                  "CALIENTE": "CALIENTE", "TRABAJO EN CALIENTE": "CALIENTE",
+                  "EQUIPO_ENERGIZADO": "EQUIPO_ENERGIZADO", "EQUIPO ENERGIZADO": "EQUIPO_ENERGIZADO", "ENERGIZADO": "EQUIPO_ENERGIZADO",
+                  "IZAJE_CARGAS": "IZAJE_CARGAS", "IZAJE": "IZAJE_CARGAS", "IZAJE Y CARGAS": "IZAJE_CARGAS",
+                  "MAQUINARIA_PESADA": "MAQUINARIA_PESADA", "MAQUINARIA PESADA": "MAQUINARIA_PESADA",
+                  "ICS": "ICS", "INTERVENCION ICS": "ICS",
+                };
+                if (data.tiposEspeciales && Array.isArray(data.tiposEspeciales) && data.tiposEspeciales.length > 0) {
+                  setTiposEspecial((prev) => {
+                    const updated = { ...prev };
+                    data.tiposEspeciales.forEach((t: string) => {
+                      const key = tipoMap[t.toUpperCase().trim()] || t.toUpperCase().replace(/\s+/g, "_");
+                      updated[key] = true;
+                    });
+                    return updated;
+                  });
                 }
-                if (data.requiereLoto) setRequiereLoto(true);
+                if (data.requiereLoto === true) setRequiereLoto(true);
               } catch (e: any) {
                 alert("Error al conectar con IA: " + e.message);
               } finally {
