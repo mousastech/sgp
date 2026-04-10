@@ -5,8 +5,9 @@ import { genFolio } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 
 export async function getEmpleadosOperadores() {
+  // All ENGIE employees who can be Solicitante (Anexo 1: all except Contratista)
   return (await getPrisma()).empleado.findMany({
-    where: { activo: true, esSupervisor: false },
+    where: { activo: true, puedeSerSolicitante: true },
     orderBy: { nombreCompleto: "asc" },
   });
 }
