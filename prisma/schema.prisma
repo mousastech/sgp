@@ -41,6 +41,8 @@ model Area {
   createdAt      DateTime         @default(now()) @map("created_at")
   empleados      Empleado[]
   permisos       PermisoTrabajo[]
+  rondaPlantillas RondaPlantilla[]
+  rondas         Ronda[]
 
   @@map("areas")
 }
@@ -66,6 +68,7 @@ model Empleado {
   area            Area?            @relation(fields: [areaId], references: [id])
   permisos        PermisoTrabajo[]
   aprobaciones    Aprobacion[]
+  rondas          Ronda[]
 
   @@map("empleados")
 }
@@ -178,6 +181,42 @@ model Rol {
   createdAt           DateTime @default(now()) @map("created_at")
 
   @@map("roles")
+}
+
+model RondaPlantilla {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @db.VarChar(200)
+  areaId      Int?     @map("area_id")
+  descripcion String?
+  puntos      Json     @default("[]")
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  area        Area?    @relation(fields: [areaId], references: [id])
+  rondas      Ronda[]
+
+  @@map("rondas_plantillas")
+}
+
+model Ronda {
+  id           Int              @id @default(autoincrement())
+  plantillaId  Int              @map("plantilla_id")
+  empleadoId   Int              @map("empleado_id")
+  areaId       Int              @map("area_id")
+  fecha        DateTime         @db.Date
+  horaInicio   String?          @map("hora_inicio") @db.VarChar(10)
+  horaFin      String?          @map("hora_fin") @db.VarChar(10)
+  estado       String           @default("EN_CURSO") @db.VarChar(20)
+  lecturas     Json             @default("[]")
+  observaciones String?
+  coordenadasLat Decimal?       @map("coordenadas_lat") @db.Decimal(10, 8)
+  coordenadasLon Decimal?       @map("coordenadas_lon") @db.Decimal(11, 8)
+  anomalias    Int              @default(0)
+  createdAt    DateTime         @default(now()) @map("created_at")
+  plantilla    RondaPlantilla   @relation(fields: [plantillaId], references: [id])
+  empleado     Empleado         @relation(fields: [empleadoId], references: [id])
+  area         Area             @relation(fields: [areaId], references: [id])
+
+  @@map("rondas")
 }
 
 model Evidencia {

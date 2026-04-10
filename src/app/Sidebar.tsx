@@ -9,6 +9,7 @@ import {
   ClipboardList,
   ClipboardCheck,
   CheckCircle,
+  Activity,
   BarChart3,
   BookOpen,
   Calendar,
@@ -36,6 +37,7 @@ const NAV_SECTIONS = [
       { href: "/captura", label: "Permiso General", icon: ClipboardList },
       { href: "/verificacion", label: "Listas de Verificacion", icon: ClipboardCheck },
       { href: "/aprobacion", label: "Gestion de Permisos", icon: CheckCircle },
+      { href: "/rondas", label: "Rondas Operativas", icon: Activity },
     ],
   },
   {
