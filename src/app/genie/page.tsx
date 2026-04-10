@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useI18n } from "@/lib/i18n";
 import { MessageSquare, Send, Database, Loader2 } from "lucide-react";
 
 interface Message {
@@ -22,6 +23,7 @@ const SUGGESTIONS = [
 ];
 
 export default function GeniePage() {
+  const { t } = useI18n();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -73,8 +75,8 @@ export default function GeniePage() {
           <img src="/hero-captura.jpg" alt="" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-700/80 to-purple-600/50 flex items-center p-6">
             <div>
-              <h2 className="text-xl font-bold text-white">Genie de Seguridad</h2>
-              <p className="text-sm text-white/80 mt-1">Pregunta sobre permisos, cumplimiento y seguridad — Powered by Claude Sonnet 4.6</p>
+              <h2 className="text-xl font-bold text-white">{ t("genie.title")}</h2>
+              <p className="text-sm text-white/80 mt-1">{t("genie.subtitle")}</p>
             </div>
           </div>
         </div>
@@ -86,8 +88,8 @@ export default function GeniePage() {
           <div className="flex flex-col items-center justify-center h-full space-y-6">
             <div className="text-center">
               <MessageSquare size={40} className="text-indigo-400 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-gray-700">Pregunta lo que quieras</h3>
-              <p className="text-sm text-gray-400 mt-1">Consulto la base de datos de permisos en tiempo real</p>
+              <h3 className="text-lg font-semibold text-gray-700">{ t("genie.pregunta")}</h3>
+              <p className="text-sm text-gray-400 mt-1">{t("genie.consulto")}</p>
             </div>
             <div className="grid grid-cols-2 gap-2 max-w-2xl">
               {SUGGESTIONS.map((s, i) => (
@@ -152,7 +154,7 @@ export default function GeniePage() {
           <div className="flex justify-start">
             <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-2">
               <Loader2 size={16} className="animate-spin text-indigo-500" />
-              <span className="text-sm text-gray-400">Consultando...</span>
+              <span className="text-sm text-gray-400">{ t("genie.consultando")}</span>
             </div>
           </div>
         )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useI18n } from "@/lib/i18n";
 import { TrendingUp, AlertTriangle, Shield, Clock, Zap } from "lucide-react";
 
 const ESTADO_COLORS: Record<string, string> = {
@@ -29,6 +30,7 @@ function Bar({ value, max, color, label, count }: { value: number; max: number; 
 }
 
 export function AnaliticaView({ data }: { data: any }) {
+  const { t } = useI18n();
   const [insights, setInsights] = useState<string | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
 
@@ -72,8 +74,8 @@ export function AnaliticaView({ data }: { data: any }) {
         <img src="/hero-captura.jpg" alt="" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-indigo-800/80 to-purple-600/50 flex items-center p-6">
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-white">Analitica Predictiva de Riesgo</h2>
-            <p className="text-sm text-white/80 mt-1">Patrones, tendencias e insights con IA — Powered by Claude Sonnet</p>
+            <h2 className="text-xl font-bold text-white">{ t("analitica.title")}</h2>
+            <p className="text-sm text-white/80 mt-1">{t("analitica.subtitle")}</p>
           </div>
           <button onClick={generateInsights} disabled={insightsLoading}
             className="flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur text-white text-sm font-semibold rounded-xl hover:bg-white/30 transition disabled:opacity-50">
@@ -115,7 +117,7 @@ export function AnaliticaView({ data }: { data: any }) {
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <Zap size={18} className="text-indigo-600" />
-            <span className="text-sm font-bold text-indigo-800">Insights Generados por IA</span>
+            <span className="text-sm font-bold text-indigo-800">{ t("analitica.insights_title")}</span>
           </div>
           <div className="text-sm text-indigo-900 whitespace-pre-wrap leading-relaxed">{insights}</div>
         </div>

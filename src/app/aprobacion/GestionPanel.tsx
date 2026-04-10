@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { usePersona } from "@/lib/PersonaContext";
+import { useI18n } from "@/lib/i18n";
 import { GestionRoleBanner } from "./RoleBanner";
 import {
   iniciarRevision,
@@ -113,6 +114,7 @@ type SupervisorFull = Supervisor & {
 
 export function GestionPanel({ supervisores, permisos }: { supervisores: SupervisorFull[]; permisos: Permiso[] }) {
   const { persona } = usePersona();
+  const { t } = useI18n();
   const [supId, setSupId] = useState(supervisores[0]?.id);
   const [activeTab, setActiveTab] = useState("ENVIADO");
   const canAuthorize = persona?.puedeSerAutorizador || persona?.esJefePlanta || false;
@@ -166,8 +168,8 @@ export function GestionPanel({ supervisores, permisos }: { supervisores: Supervi
         <img src="/hero-captura.jpg" alt="" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-engie-blue/80 to-engie-blue-light/50 flex items-end p-6">
           <div>
-            <h2 className="text-2xl font-bold text-white drop-shadow-lg">Gestion de Permisos de Trabajo</h2>
-            <p className="text-sm text-white/80 mt-1">Flujo segun RENOVABLES-O-PR-01 Ed.2</p>
+            <h2 className="text-2xl font-bold text-white drop-shadow-lg">{t("gestion.title")}</h2>
+            <p className="text-sm text-white/80 mt-1">{t("gestion.subtitle")}</p>
           </div>
         </div>
       </div>
@@ -201,7 +203,7 @@ export function GestionPanel({ supervisores, permisos }: { supervisores: Supervi
 
       {/* Pipeline visualization */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Flujo del Permiso</p>
+        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">{t("gestion.flujo")}</p>
         <div className="flex items-center gap-1">
           {PIPELINE_STATES.map((state, i) => {
             const cfg = ESTADO_CONFIG[state];

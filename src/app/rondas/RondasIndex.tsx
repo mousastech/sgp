@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { usePersona } from "@/lib/PersonaContext";
 import { crearRonda, crearPlantilla } from "@/lib/actions/rondas";
 import { Activity, Plus, Clock, AlertTriangle, CheckCircle, Play, TrendingUp } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 import Link from "next/link";
 
 type Plantilla = { id: number; nombre: string; descripcion: string | null; puntos: any; area: { nombre: string } | null };
@@ -28,6 +29,7 @@ const PUNTOS_DEFAULT = [
 export function RondasIndex({ plantillas, rondas, stats, areas }: { plantillas: Plantilla[]; rondas: Ronda[]; stats: Stats; areas: Area[] }) {
   const router = useRouter();
   const { persona } = usePersona();
+  const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [showNewPlantilla, setShowNewPlantilla] = useState(false);
   const [showNewRonda, setShowNewRonda] = useState(false);
@@ -61,8 +63,8 @@ export function RondasIndex({ plantillas, rondas, stats, areas }: { plantillas: 
         <img src="/hero-captura.jpg" alt="" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-700/80 to-engie-blue-light/50 flex items-center p-6">
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-white">Rondas Operativas</h2>
-            <p className="text-sm text-white/80 mt-1">Inspecciones de rutina, lecturas y verificaciones de campo</p>
+            <h2 className="text-xl font-bold text-white">{ t("rondas.title")}</h2>
+            <p className="text-sm text-white/80 mt-1">{t("rondas.subtitle")}</p>
           </div>
           <div className="flex gap-2">
             <button onClick={() => setShowNewRonda(!showNewRonda)}
@@ -86,17 +88,17 @@ export function RondasIndex({ plantillas, rondas, stats, areas }: { plantillas: 
         <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
           <Activity size={20} className="text-cyan-600 mx-auto mb-1" />
           <p className="text-2xl font-extrabold text-cyan-600">{stats.total}</p>
-          <p className="text-[10px] text-gray-500 uppercase font-semibold">Total Rondas</p>
+          <p className="text-[10px] text-gray-500 uppercase font-semibold">{ t("rondas.total")}</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
           <Clock size={20} className="text-engie-blue mx-auto mb-1" />
           <p className="text-2xl font-extrabold text-engie-blue">{stats.hoy}</p>
-          <p className="text-[10px] text-gray-500 uppercase font-semibold">Hoy</p>
+          <p className="text-[10px] text-gray-500 uppercase font-semibold">{ t("rondas.hoy")}</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
           <AlertTriangle size={20} className="text-red-500 mx-auto mb-1" />
           <p className="text-2xl font-extrabold text-red-500">{stats.totalAnomalias}</p>
-          <p className="text-[10px] text-gray-500 uppercase font-semibold">Anomalias</p>
+          <p className="text-[10px] text-gray-500 uppercase font-semibold">{ t("rondas.anomalias")}</p>
         </div>
       </div>
 
@@ -143,7 +145,7 @@ export function RondasIndex({ plantillas, rondas, stats, areas }: { plantillas: 
 
       {/* Rondas list */}
       <div>
-        <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Rondas Recientes</h3>
+        <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">{ t("rondas.recientes")}</h3>
         {rondas.length === 0 ? (
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center text-gray-400">
             No hay rondas registradas. Cree una plantilla e inicie su primera ronda.
@@ -157,7 +159,7 @@ export function RondasIndex({ plantillas, rondas, stats, areas }: { plantillas: 
                 <th className="text-left p-2 font-semibold text-gray-600">Tecnico</th>
                 <th className="text-left p-2 font-semibold text-gray-600">Area</th>
                 <th className="text-left p-2 font-semibold text-gray-600">Horario</th>
-                <th className="text-center p-2 font-semibold text-gray-600">Anomalias</th>
+                <th className="text-center p-2 font-semibold text-gray-600">{ t("rondas.anomalias")}</th>
                 <th className="text-left p-2 font-semibold text-gray-600">Estado</th>
               </tr></thead>
               <tbody className="divide-y divide-gray-100">

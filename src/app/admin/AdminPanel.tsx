@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { usePersona } from "@/lib/PersonaContext";
+import { useI18n } from "@/lib/i18n";
 import { crearCategoria, editarCategoria, desactivarCategoria, crearEquipo, editarEquipo, desactivarEquipo, crearArea, editarArea, desactivarArea, crearEmpleado, editarEmpleado, desactivarEmpleado } from "@/lib/actions/admin";
 import { crearRol, editarRol, desactivarRol } from "@/lib/actions/roles";
 import { Pencil, Trash2, Shield, AlertTriangle } from "lucide-react";

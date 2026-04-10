@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useI18n } from "@/lib/i18n";
 import { Search, Download, Printer, Filter, X } from "lucide-react";
 
 type Permiso = {

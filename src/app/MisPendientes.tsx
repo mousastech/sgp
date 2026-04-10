@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePersona } from "@/lib/PersonaContext";
+import { useI18n } from "@/lib/i18n";
 import Link from "next/link";
 import { Bell, ArrowRight, ClipboardCheck, AlertTriangle, Play, Search, CheckCircle, Archive } from "lucide-react";
 
@@ -36,6 +37,7 @@ const COLORS: Record<string, { bg: string; border: string; text: string; icon: s
 
 export function MisPendientes() {
   const { persona } = usePersona();
+  const { t } = useI18n();
   const [pendientes, setPendientes] = useState<Pendiente[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -56,7 +58,7 @@ export function MisPendientes() {
     <div>
       <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
         <Bell size={14} className="text-red-500" />
-        Mis Pendientes — {persona.nombreCompleto}
+        {t("home.mis_pendientes")} — {persona.nombreCompleto}
       </h2>
       <div className="space-y-2">
         {pendientes.map((p, i) => {

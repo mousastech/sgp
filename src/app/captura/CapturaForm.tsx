@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { crearPermiso } from "@/lib/actions/permisos";
+import { useI18n } from "@/lib/i18n";
 
 type Props = {
   empleados: { id: number; numeroEmpleado: string; nombreCompleto: string }[];
@@ -30,6 +31,7 @@ const TIPOS_ESPECIAL = [
 ];
 
 export function CapturaForm({ empleados, responsables, areas }: Props) {
+  const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<{ success?: boolean; folio?: string; estado?: string; errors?: string[]; warning?: string } | null>(null);
   const [tiposEspecial, setTiposEspecial] = useState<Record<string, boolean>>({});
@@ -86,7 +88,7 @@ export function CapturaForm({ empleados, responsables, areas }: Props) {
         <img src="/hero-captura.jpg" alt="" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-engie-blue/80 to-engie-blue-light/50 flex items-end p-6">
           <div>
-            <h2 className="text-2xl font-bold text-white drop-shadow-lg">Permiso de Trabajo General</h2>
+            <h2 className="text-2xl font-bold text-white drop-shadow-lg">{t("captura.title")}</h2>
             <p className="text-sm text-white/80 mt-1">RENOVABLES-O-PR-01-IN01-FO01</p>
           </div>
         </div>
@@ -117,13 +119,13 @@ export function CapturaForm({ empleados, responsables, areas }: Props) {
 
         {/* ═══════════ APARTADO I. SOLICITUD ═══════════ */}
         <div className="bg-engie-blue/5 border-l-4 border-engie-blue rounded-r-xl px-4 py-2">
-          <h3 className="text-base font-bold text-engie-blue">I. Solicitud</h3>
-          <p className="text-xs text-gray-500">Seccion 6.1 — Datos del permiso, personas y descripcion</p>
+          <h3 className="text-base font-bold text-engie-blue">{t("captura.apartado1")}</h3>
+          <p className="text-xs text-gray-500">{t("captura.apartado1_desc")}</p>
         </div>
 
         {/* Encabezado: Orden de trabajo + Fecha solicitada */}
         <section className="bg-white rounded-xl border border-gray-200 p-5">
-          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Encabezado del Permiso</h4>
+          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">{t("captura.encabezado")}</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Orden de Trabajo # <span className="text-gray-400 font-normal">(2)</span></span>
@@ -157,7 +159,7 @@ export function CapturaForm({ empleados, responsables, areas }: Props) {
 
         {/* Datos de solicitud */}
         <section className="bg-white rounded-xl border border-gray-200 p-5">
-          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Datos de la Solicitud</h4>
+          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">{t("captura.datos_solicitud")}</h4>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Duracion (dias) <span className="text-gray-400 font-normal">(7)</span></span>
@@ -209,7 +211,7 @@ export function CapturaForm({ empleados, responsables, areas }: Props) {
 
         {/* Roles y personas */}
         <section className="bg-white rounded-xl border border-gray-200 p-5">
-          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Personas Involucradas</h4>
+          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">{t("captura.personas")}</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="block">
               <span className="text-sm font-medium text-gray-700">Solicitante ENGIE * <span className="text-gray-400 font-normal">(12)</span></span>
@@ -238,8 +240,8 @@ export function CapturaForm({ empleados, responsables, areas }: Props) {
         {/* ═══════════ APARTADO II. ANALISIS DE SEGURIDAD ═══════════ */}
         <div className="bg-red-50 border-l-4 border-red-500 rounded-r-xl px-4 py-2 flex items-center justify-between">
           <div>
-            <h3 className="text-base font-bold text-red-700">II. Analisis de Seguridad</h3>
-            <p className="text-xs text-red-400">Seccion 6.2 — Resultado del analisis de riesgos SEGURIDAD-PR-02-FO01</p>
+            <h3 className="text-base font-bold text-red-700">{t("captura.apartado2")}</h3>
+            <p className="text-xs text-red-400">{t("captura.apartado2_desc")}</p>
           </div>
           <button
             type="button"
@@ -307,7 +309,7 @@ export function CapturaForm({ empleados, responsables, areas }: Props) {
             {aiLoading ? (
               <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Analizando...</>
             ) : (
-              <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Analizar con IA</>
+              <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> {t("captura.analizar_ia")}</>
             )}
           </button>
         </div>
@@ -356,8 +358,8 @@ export function CapturaForm({ empleados, responsables, areas }: Props) {
 
         {/* ═══════════ APARTADO III. CONDICIONES ESPECIALES ═══════════ */}
         <div className="bg-purple-50 border-l-4 border-purple-500 rounded-r-xl px-4 py-2">
-          <h3 className="text-base font-bold text-purple-700">III. Listas de Verificacion para Trabajo de Riesgo Especial</h3>
-          <p className="text-xs text-purple-400">Seccion 6.3 — Marque Si o N/A para cada tipo de trabajo especial</p>
+          <h3 className="text-base font-bold text-purple-700">{t("captura.apartado3")}</h3>
+          <p className="text-xs text-purple-400">{t("captura.apartado3_desc")}</p>
         </div>
 
         <section className="bg-white rounded-xl border border-gray-200 p-5">
@@ -430,7 +432,7 @@ export function CapturaForm({ empleados, responsables, areas }: Props) {
 
         {/* ═══════════ GEOLOCALIZACION ═══════════ */}
         <section className="bg-white rounded-xl border border-gray-200 p-5">
-          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Geolocalizacion y Observaciones</h4>
+          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">{t("captura.geo")}</h4>
           <div className={`text-xs mb-3 px-3 py-2 rounded-lg ${geo ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"}`}>
             {geo ? `Ubicacion obtenida: ${geo.lat.toFixed(6)}, ${geo.lon.toFixed(6)} — ${geoStatus}` : geoStatus}
           </div>
@@ -564,14 +566,14 @@ export function CapturaForm({ empleados, responsables, areas }: Props) {
         <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 p-5">
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" name="enviar" value="true" className="w-4 h-4 rounded border-gray-300 text-engie-blue" />
-            <span className="text-sm font-medium text-gray-700">Enviar directamente para autorizacion</span>
+            <span className="text-sm font-medium text-gray-700">{t("captura.enviar")}</span>
           </label>
           <button
             type="submit"
             disabled={isPending}
             className="bg-gradient-to-r from-engie-blue to-[#0055CC] text-white font-semibold py-2.5 px-8 rounded-xl shadow-md hover:shadow-lg hover:from-engie-blue-dark hover:to-engie-blue transition-all disabled:opacity-50"
           >
-            {isPending ? "Guardando..." : "Guardar Permiso"}
+            {isPending ? t("captura.guardando") : t("captura.guardar")}
           </button>
         </div>
       </form>
