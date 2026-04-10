@@ -32,14 +32,6 @@ const ESTADO_BADGE: Record<string, string> = {
 export default async function HomePage() {
   const data = await getHomeData();
 
-  const pendingActions = [
-    { count: data.pendientesRevision, label: "Permisos pendientes de revision", icon: Clock, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", href: "/aprobacion" },
-    { count: data.enRevision, label: "En revision por Autorizador", icon: CheckCircle, color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-200", href: "/aprobacion" },
-    { count: data.autorizadosErum, label: "ERUM pendiente para iniciar", icon: AlertTriangle, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", href: "/aprobacion" },
-    { count: data.enEjecucion, label: "Trabajos en ejecucion ahora", icon: Play, color: "text-orange-600", bg: "bg-orange-50", border: "border-orange-200", href: "/aprobacion" },
-    { count: data.cierrePendiente, label: "Cierre pendiente de Autorizador", icon: Archive, color: "text-teal-600", bg: "bg-teal-50", border: "border-teal-200", href: "/aprobacion" },
-  ].filter((a) => a.count > 0);
-
   const hora = new Date().getHours();
   const saludo = hora < 12 ? "Buenos dias" : hora < 18 ? "Buenas tardes" : "Buenas noches";
 
@@ -71,40 +63,6 @@ export default async function HomePage() {
 
       {/* Personalized pending actions for selected persona */}
       <MisPendientes />
-
-      {/* Pending actions */}
-      {pendingActions.length > 0 && (
-        <div>
-          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Acciones Pendientes</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {pendingActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <Link key={action.label} href={action.href}
-                  className={`flex items-center gap-4 p-4 rounded-xl border ${action.border} ${action.bg} hover:shadow-md transition-all group`}>
-                  <div className={`w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-sm`}>
-                    <span className={`text-2xl font-extrabold ${action.color}`}>{action.count}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold ${action.color}`}>{action.label}</p>
-                  </div>
-                  <ArrowRight size={16} className="text-gray-300 group-hover:text-gray-500 transition" />
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {pendingActions.length === 0 && data.totalPermisos > 0 && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-5 flex items-center gap-3">
-          <CheckCircle className="text-green-500" size={24} />
-          <div>
-            <p className="text-sm font-semibold text-green-800">Todo al dia</p>
-            <p className="text-xs text-green-600">No hay acciones pendientes en este momento.</p>
-          </div>
-        </div>
-      )}
 
       {/* Today's agenda */}
       <div>
